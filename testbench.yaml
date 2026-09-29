@@ -1,0 +1,23 @@
+env:
+  APP_ENV: local
+  APP_URL: http://127.0.0.1:8765
+  AUTH_MODEL: Workbench\App\Models\User
+  SESSION_DRIVER: database
+  QUEUE_CONNECTION: database
+  CACHE_STORE: database
+
+providers:
+  - Workbench\App\Providers\WorkbenchServiceProvider
+
+seeders:
+  - Workbench\Database\Seeders\DatabaseSeeder
+
+workbench:
+  start: '/'
+  install: true
+  discovers:
+    web: true
+  build:
+    - create-sqlite-db
+    - db-wipe
+    - migrate-fresh

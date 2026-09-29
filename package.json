@@ -1,0 +1,15 @@
+{
+    "name": "nitpick",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "esbuild resources/js/panel.jsx --bundle --minify --format=iife --target=es2022 --jsx=automatic --jsx-import-source=preact --loader:.css=text --outfile=dist/panel.js"
+    },
+    "dependencies": {
+        "preact": "^10.29.8"
+    },
+    "devDependencies": {
+        "esbuild": "^0.28.2",
+        "playwright": "^1.63.0"
+    }
+}

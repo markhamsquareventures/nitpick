@@ -1,0 +1,1025 @@
+/*
+ * Plain CSS, not Tailwind: Tailwind v4 @property rules do not work in a shadow root.
+ * The !important on :host wins over a page rule that targets the element, and `all: initial`
+ * stops inherited page styles. Custom properties still inherit, so every token has a --qa- prefix.
+ * The panel is always dark. Every size is on a 4 px grid.
+ */
+:host {
+    all: initial !important;
+    display: block !important;
+}
+
+.root {
+    --qa-space-1: 4px;
+    --qa-space-2: 8px;
+    --qa-space-3: 12px;
+    --qa-space-4: 16px;
+    --qa-space-5: 20px;
+    --qa-space-6: 24px;
+    --qa-target: 44px;
+    --qa-target-sm: 32px;
+    --qa-card-width: 400px;
+    --qa-radius-card: 24px;
+    --qa-radius-inner: 16px;
+    --qa-radius-control: 12px;
+    --qa-radius-small: 8px;
+    --qa-radius-box: 4px;
+    --qa-radius-full: 9999px;
+    --qa-font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --qa-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --qa-text-sm: 12px;
+    --qa-text-md: 14px;
+    --qa-text-lg: 16px;
+    --qa-leading-sm: 16px;
+    --qa-leading-md: 20px;
+    --qa-leading-lg: 24px;
+    --qa-canvas: #0c0d10;
+    --qa-surface: #16181d;
+    --qa-sunken: #111317;
+    --qa-raised: #22252c;
+    --qa-raised-hover: #2c3039;
+    --qa-selected: #3e4555;
+    --qa-text: #eceef2;
+    --qa-text-muted: #9ba2ae;
+    --qa-accent: #a3bcff;
+    --qa-light: #eceef2;
+    --qa-light-hover: #ffffff;
+    --qa-on-light: #0c0d10;
+    --qa-success: #74e39d;
+    --qa-danger: #ff9e94;
+    --qa-danger-hover: #ffb8b0;
+    --qa-danger-surface: #3a1c1c;
+    --qa-on-danger: #1c0b0a;
+    --qa-mail-surface: #f6f7f9;
+    --qa-shadow: 0 16px 48px rgb(0 0 0 / 0.36), 0 4px 12px rgb(0 0 0 / 0.24);
+
+    color-scheme: dark;
+    font-family: var(--qa-font);
+    font-size: var(--qa-text-md);
+    line-height: var(--qa-leading-md);
+    color: var(--qa-text);
+    -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+:focus-visible {
+    outline: 2px solid var(--qa-accent);
+    outline-offset: 2px;
+}
+
+button,
+input,
+select {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+.icon {
+    flex: none;
+}
+
+/* The pill, and the round close button that it becomes while the card is open. */
+
+.pill {
+    position: fixed;
+    right: var(--qa-space-4);
+    bottom: var(--qa-space-4);
+    z-index: 2147483646;
+    display: flex;
+    align-items: center;
+    gap: var(--qa-space-2);
+    height: var(--qa-target);
+    max-width: 320px;
+    padding: 0 var(--qa-space-3) 0 var(--qa-space-5);
+    border: 0;
+    border-radius: var(--qa-radius-full);
+    background: var(--qa-canvas);
+    box-shadow: var(--qa-shadow);
+    color: var(--qa-text);
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 120ms ease;
+}
+
+.pill:hover {
+    background: var(--qa-surface);
+}
+
+.pill[data-open='true'] {
+    justify-content: center;
+    width: var(--qa-target);
+    padding: 0;
+}
+
+.pill .icon {
+    color: var(--qa-text-muted);
+}
+
+.pill[data-open='true'] .icon {
+    color: var(--qa-text);
+}
+
+.pill-brand {
+    font-weight: 700;
+}
+
+.pill-separator {
+    color: var(--qa-text-muted);
+}
+
+.pill-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pill-round {
+    padding: var(--qa-space-1) var(--qa-space-2);
+    border-radius: var(--qa-radius-full);
+    background: var(--qa-raised);
+    font-size: var(--qa-text-sm);
+    font-weight: 600;
+    line-height: var(--qa-leading-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The card. */
+
+.card {
+    position: fixed;
+    right: var(--qa-space-4);
+    bottom: 72px;
+    z-index: 2147483647;
+    display: flex;
+    flex-direction: column;
+    width: min(var(--qa-card-width), calc(100vw - 32px));
+    max-height: calc(100vh - 88px);
+    border-radius: var(--qa-radius-card);
+    background: var(--qa-canvas);
+    box-shadow: var(--qa-shadow);
+    overflow: clip;
+    transform-origin: bottom right;
+}
+
+/* A reload that finds the card open shows it only when its data is there, so nothing jumps. */
+.card[data-loading='true'] {
+    visibility: hidden;
+}
+
+.card[data-enter='true'] {
+    animation: qa-card-in 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes qa-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+.card-header {
+    flex: none;
+    padding: var(--qa-space-3) var(--qa-space-4);
+}
+
+.card-header .note {
+    margin-top: var(--qa-space-2);
+}
+
+/* The header's own pill: smaller than the shared 44 px button, only here (see the confirm's
+   Cancel/Close round buttons below, which match it so the row does not resize between steps). */
+.card-header .button {
+    height: var(--qa-target-sm);
+    padding: 0 var(--qa-space-3);
+    border-radius: var(--qa-radius-full);
+}
+
+.header-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--qa-space-3);
+}
+
+.header-title {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.title {
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--qa-text-md);
+    font-weight: 600;
+    line-height: var(--qa-leading-md);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.subtitle {
+    margin: 0;
+    color: var(--qa-text-muted);
+    font-size: var(--qa-text-sm);
+    line-height: var(--qa-leading-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.subtitle[data-round='open'] {
+    color: var(--qa-success);
+}
+
+.picker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: 100%;
+}
+
+.picker-select {
+    min-width: 0;
+    max-width: 100%;
+    height: var(--qa-leading-md);
+    padding: 0 var(--qa-space-6) 0 0;
+    border: 0;
+    border-radius: var(--qa-radius-small);
+    appearance: none;
+    background: transparent;
+    font-size: var(--qa-text-md);
+    font-weight: 600;
+    line-height: var(--qa-leading-md);
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.picker-select option {
+    background: var(--qa-surface);
+    color: var(--qa-text);
+}
+
+.picker .icon {
+    position: absolute;
+    right: var(--qa-space-1);
+    color: var(--qa-text-muted);
+    pointer-events: none;
+}
+
+.note {
+    margin: 0;
+    color: var(--qa-text-muted);
+    font-size: var(--qa-text-sm);
+    line-height: var(--qa-leading-sm);
+    overflow-wrap: anywhere;
+}
+
+.note code {
+    color: var(--qa-text);
+}
+
+/* The view between the header and the tab bar: a scroll area, and on Checklist the composer. */
+
+.view {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* position: relative keeps the visually hidden labels inside the scroll area's clip. Overflow-y
+   auto also clips overflow-x, so every side needs padding: a top-flush first row would clip the
+   top of its own focus ring against this edge, since the ring draws outside the row's own box. */
+.scroller {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--qa-space-2);
+}
+
+.scroller[data-ready='false'] {
+    visibility: hidden;
+}
+
+.tabbar {
+    flex: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--qa-space-1);
+    padding: var(--qa-space-2);
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--qa-space-2);
+    height: var(--qa-target);
+    border: 0;
+    border-radius: var(--qa-radius-control);
+    background: transparent;
+    color: var(--qa-text-muted);
+    font-weight: 500;
+}
+
+.tab:hover {
+    background: var(--qa-surface);
+    color: var(--qa-text);
+}
+
+.tab[aria-selected='true'] {
+    background: var(--qa-selected);
+    color: var(--qa-text);
+    font-weight: 600;
+}
+
+/* Layout. */
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-4);
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-2);
+}
+
+.group-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--qa-space-1);
+    padding: 0 0 0 var(--qa-space-3);
+}
+
+/* The persona actions sit next to a muted heading, so they are quiet until hovered. */
+.group-header > .secondary,
+.handoff-step > .secondary {
+    padding: 0 var(--qa-space-3);
+    background: transparent;
+}
+
+.group-header > .secondary:hover:enabled,
+.handoff-step > .secondary:hover:enabled {
+    background: var(--qa-raised);
+}
+
+.group-title {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--qa-text-muted);
+    font-size: var(--qa-text-md);
+    font-weight: 600;
+    line-height: var(--qa-leading-md);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.retest {
+    margin: var(--qa-space-4) 0 0;
+    padding: 0 var(--qa-space-3);
+    color: var(--qa-accent);
+    font-size: var(--qa-text-md);
+    font-weight: 600;
+    line-height: var(--qa-leading-md);
+}
+
+.panel-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-1);
+    padding: var(--qa-space-3);
+    border-radius: var(--qa-radius-inner);
+    background: var(--qa-surface);
+}
+
+.item-text {
+    margin: 0;
+    font-size: var(--qa-text-lg);
+    font-weight: 500;
+    line-height: var(--qa-leading-lg);
+    overflow-wrap: anywhere;
+}
+
+/* Text. */
+
+.text {
+    margin: 0;
+}
+
+.muted {
+    color: var(--qa-text-muted);
+}
+
+.error {
+    color: var(--qa-danger);
+    font-weight: 600;
+}
+
+code,
+.output {
+    font-family: var(--qa-font-mono);
+    font-size: var(--qa-text-sm);
+    line-height: var(--qa-leading-sm);
+}
+
+.output {
+    max-height: 240px;
+    margin: 0;
+    overflow: auto;
+    padding: var(--qa-space-3);
+    border-radius: var(--qa-radius-small);
+    background: var(--qa-canvas);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.failure {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-2);
+    padding: var(--qa-space-3);
+    border-radius: var(--qa-radius-control);
+    background: var(--qa-danger-surface);
+}
+
+.link {
+    color: var(--qa-accent);
+    overflow-wrap: anywhere;
+}
+
+.links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Buttons. */
+
+.button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: var(--qa-space-2);
+    height: var(--qa-target);
+    padding: 0 var(--qa-space-4);
+    border: 0;
+    border-radius: var(--qa-radius-control);
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background-color 120ms ease;
+}
+
+.button:disabled {
+    opacity: 0.5;
+}
+
+.secondary {
+    background: var(--qa-raised);
+    color: var(--qa-text);
+}
+
+.secondary:hover:enabled {
+    background: var(--qa-raised-hover);
+}
+
+.light,
+.primary {
+    border-radius: var(--qa-radius-full);
+    background: var(--qa-light);
+    color: var(--qa-on-light);
+}
+
+.light:hover:enabled,
+.primary:hover:enabled {
+    background: var(--qa-light-hover);
+}
+
+.danger {
+    background: var(--qa-danger);
+    color: var(--qa-on-danger);
+}
+
+.danger:hover:enabled {
+    background: var(--qa-danger-hover);
+}
+
+/* The 44px target centers on the nit's first text line (20px). The top and bottom margins are
+   (line height - target) / 2, so the target adds no height of its own to a one-line nit; the
+   right margin lines the glyph up with the card's edge, the same as the target's own hit area
+   past the glyph. */
+.icon-button {
+    width: var(--qa-target);
+    margin: calc((var(--qa-leading-md) - var(--qa-target)) / 2) calc(var(--qa-space-2) * -1)
+        calc((var(--qa-leading-md) - var(--qa-target)) / 2) 0;
+    padding: 0;
+    background: transparent;
+    color: var(--qa-text-muted);
+}
+
+.icon-button:hover:enabled {
+    color: var(--qa-text);
+}
+
+.back {
+    padding: 0 var(--qa-space-4) 0 var(--qa-space-3);
+}
+
+/* The inline two-step confirm. It takes its own line in the row of its button. */
+
+.confirm {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--qa-space-2);
+    padding: var(--qa-space-2) var(--qa-space-2) var(--qa-space-2) var(--qa-space-3);
+    border-radius: var(--qa-radius-control);
+    background: var(--qa-raised);
+}
+
+.confirm-question {
+    flex: 1 1 160px;
+    margin: 0;
+    font-weight: 500;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: var(--qa-space-2);
+}
+
+.confirm .secondary {
+    background: var(--qa-raised-hover);
+}
+
+.confirm .primary,
+.confirm .danger {
+    border-radius: var(--qa-radius-control);
+}
+
+/* Checklist items: one card per group, one compact row per item. */
+
+.items {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    border-radius: var(--qa-radius-inner);
+    background: var(--qa-surface);
+    list-style: none;
+}
+
+.item-row {
+    display: flex;
+    align-items: flex-start;
+}
+
+/* The glyph is 16 px; the button around it is a 32 px hit area (WCAG 2.2's 24 px minimum, plus
+   room to spare). A small top margin lines the box up with the first line of the item text
+   instead of the full, possibly-wrapped, text block. */
+.box {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--qa-target-sm);
+    height: var(--qa-target-sm);
+    margin-top: var(--qa-space-2);
+    padding: 0;
+    border: 0;
+    border-radius: var(--qa-radius-control);
+    background: transparent;
+    color: var(--qa-on-light);
+}
+
+.box:disabled {
+    opacity: 0.5;
+}
+
+.box-glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--qa-radius-box);
+    box-shadow: inset 0 0 0 2px var(--qa-text-muted);
+    transition:
+        background-color 120ms ease,
+        box-shadow 120ms ease;
+}
+
+.box:hover:enabled .box-glyph {
+    box-shadow: inset 0 0 0 2px var(--qa-text);
+}
+
+.box[data-status='pass'] .box-glyph {
+    background: var(--qa-success);
+    box-shadow: none;
+}
+
+.box[data-status='fail'] .box-glyph {
+    background: var(--qa-danger);
+    box-shadow: none;
+}
+
+.item-toggle {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+    min-height: var(--qa-target);
+    margin: 0;
+    padding: var(--qa-space-3) var(--qa-space-2) var(--qa-space-3) 0;
+    border: 0;
+    background: transparent;
+    color: var(--qa-text);
+    text-align: left;
+}
+
+.check-text {
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.item-meta {
+    color: var(--qa-text-muted);
+    font-size: var(--qa-text-sm);
+    line-height: var(--qa-leading-sm);
+}
+
+.nit-count {
+    color: var(--qa-text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+button.item-toggle:hover .check-text {
+    text-decoration: underline;
+    text-decoration-color: var(--qa-text-muted);
+    text-underline-offset: 4px;
+}
+
+.goto {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--qa-target);
+    height: var(--qa-target);
+    border-radius: var(--qa-radius-control);
+    color: var(--qa-text-muted);
+    transition: background-color 120ms ease;
+}
+
+.goto:hover {
+    background: var(--qa-raised);
+    color: var(--qa-text);
+}
+
+.item-error {
+    padding: 0 var(--qa-space-3) var(--qa-space-3) var(--qa-target-sm);
+}
+
+/* The nits of an item and its nit field. The block runs the full width of the card, at the same
+   left inset as the box, not indented under the item text. */
+.details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-3);
+    margin: 0 var(--qa-space-2) var(--qa-space-2);
+    padding: var(--qa-space-3);
+    border-radius: var(--qa-radius-control);
+    background: var(--qa-sunken);
+}
+
+.details[hidden] {
+    display: none;
+}
+
+.handoff-step {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--qa-space-2);
+    padding: 0 0 0 var(--qa-space-3);
+}
+
+/* Nits: a comment list. Each row is one line: the text, then the path, then delete at the
+   right. The gap is 24px (not the usual 16px) so a one-line nit's row pitch (its 20px text plus
+   the gap) still clears the 44px delete target of the next row; a smaller gap makes the two
+   targets overlap. */
+
+.nits {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.nit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--qa-space-2);
+}
+
+/* The path is a location, not attribution: no avatar, initial, or persona name. It sits inline
+   right after the nit text, so a wrap keeps the two together instead of dropping the path to
+   its own line. */
+.nit-body {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.avatar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--qa-radius-full);
+    background: var(--qa-selected);
+    font-size: var(--qa-text-sm);
+    font-weight: 600;
+    line-height: var(--qa-leading-sm);
+}
+
+.input {
+    width: 100%;
+    height: var(--qa-target);
+    padding: 0 var(--qa-space-3);
+    border: 0;
+    border-radius: var(--qa-radius-control);
+    background: var(--qa-raised);
+}
+
+.input::placeholder,
+.composer-input::placeholder {
+    color: var(--qa-text-muted);
+    opacity: 1;
+}
+
+.input:disabled,
+.composer-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.nit-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-2);
+}
+
+/* The page-nit composer, pinned under the scroll area. */
+
+.composer {
+    position: relative;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--qa-space-2);
+    padding: 0 var(--qa-space-2);
+}
+
+/* The list fades out above the composer, so the pinned field reads as on top of it. */
+.composer::before {
+    position: absolute;
+    top: -24px;
+    right: 0;
+    left: 0;
+    height: 24px;
+    background: linear-gradient(transparent, var(--qa-canvas));
+    content: '';
+    pointer-events: none;
+}
+
+.composer .error {
+    padding: 0 var(--qa-space-3);
+}
+
+/* position: relative puts this field after the composer's own ::before in paint order (both are
+   then ordered by tree position among z-index:auto positioned boxes), so its focus ring draws on
+   top of the fade instead of under it. */
+.composer-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--qa-space-2);
+    padding: var(--qa-space-1);
+    border-radius: var(--qa-radius-inner);
+    background: var(--qa-raised);
+}
+
+.composer-field:focus-within {
+    outline: 2px solid var(--qa-accent);
+    outline-offset: 2px;
+}
+
+.composer-input {
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--qa-target);
+    padding: 0 var(--qa-space-3);
+    border: 0;
+    background: transparent;
+}
+
+.composer-input:focus-visible {
+    outline: none;
+}
+
+.send {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--qa-target);
+    height: var(--qa-target);
+    padding: 0;
+    border: 0;
+    border-radius: var(--qa-radius-full);
+    background: var(--qa-light);
+    color: var(--qa-on-light);
+}
+
+.send:disabled {
+    background: var(--qa-raised-hover);
+    color: var(--qa-text-muted);
+}
+
+/* Rows: mails, personas and users. */
+
+.rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: var(--qa-space-3);
+    width: 100%;
+    min-height: 60px;
+    padding: var(--qa-space-2) var(--qa-space-2) var(--qa-space-2) var(--qa-space-3);
+    border: 0;
+    border-radius: var(--qa-radius-inner);
+    background: var(--qa-surface);
+    color: var(--qa-text);
+    text-align: left;
+    transition: background-color 120ms ease;
+}
+
+button.row {
+    padding-right: var(--qa-space-3);
+}
+
+button.row:hover {
+    background: var(--qa-raised);
+}
+
+.row .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: var(--qa-text-md);
+    line-height: var(--qa-leading-md);
+}
+
+.row > .icon {
+    color: var(--qa-text-muted);
+}
+
+.row-text {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.row-title,
+.row-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.row-title {
+    font-weight: 600;
+}
+
+.row-meta {
+    color: var(--qa-text-muted);
+    font-size: var(--qa-text-sm);
+    line-height: var(--qa-leading-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.search {
+    display: flex;
+    align-items: center;
+    gap: var(--qa-space-2);
+    height: var(--qa-target);
+    padding: 0 var(--qa-space-4);
+    border-radius: var(--qa-radius-full);
+    background: var(--qa-surface);
+    color: var(--qa-text-muted);
+}
+
+.search:focus-within {
+    outline: 2px solid var(--qa-accent);
+    outline-offset: 2px;
+}
+
+.search-input {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--qa-text);
+}
+
+.search-input:focus-visible {
+    outline: none;
+}
+
+/* Mail. */
+
+.queue {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--qa-space-3);
+}
+
+.figure {
+    font-size: var(--qa-text-lg);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.mail-frame {
+    width: 100%;
+    height: 480px;
+    border: 0;
+    border-radius: var(--qa-radius-inner);
+    background: var(--qa-mail-surface);
+}
+
+/* Last in the file, so it wins over each transition above at the same specificity. */
+@media (prefers-reduced-motion: reduce) {
+    .card[data-enter='true'] {
+        animation: none;
+    }
+
+    .pill,
+    .button,
+    .row,
+    .goto,
+    .box-glyph {
+        transition: none;
+    }
+}
