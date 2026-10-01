@@ -74,11 +74,12 @@ class NitpickServiceProvider extends PackageServiceProvider
          * so that a validation error is a 422 with {message, errors}, not a redirect.
          *
          * POST nitpick/login      {email} or {scenario: slug, persona: key}; persona "guest" logs out
-         *                           -> {user: {id, email}} or {user: null}; 422 for an email with no user
+         *                           -> {user: {id, email} or null, redirect}; 422 for an email with no user.
+         *                           redirect is the path to open next: the persona's home, or nitpick.home
          * GET  nitpick/users      ?search=part of an email or name -> {data: [{email, name}]}, 10 at most
          * POST nitpick/reset      same body as login; runs nitpick.reset_command, then the setUp()
          *                           of the named scenario (none for an email), then logs in
-         *                           -> {user, output}; 500 {message, output} if the command or setUp()
+         *                           -> {user, redirect, output}; 500 {message, output} if the command or setUp()
          *                           fails; 422 if setUp() did not make the persona's user
          * GET  nitpick/mails      -> {data: [{id, round_id, to, subject, text, links, sent_at}]}, newest first
          * GET  nitpick/mails/{id} -> the mail's HTML, with a CSP sandbox header

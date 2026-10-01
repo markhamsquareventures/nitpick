@@ -33,8 +33,8 @@ export const session = {
     write: (key, value) => write(sessionStorage, key, value),
 };
 
-/** Reloads the page. After the reload, the panel gives the focus back to the control with this focus key. */
-export function reloadWithFocus(focusKey) {
+/** Opens the path. On the new page, the panel gives the focus back to the control with this focus key. */
+export function openWithFocus(focusKey, path) {
     session.write('focus', focusKey);
-    location.reload();
+    location.assign(path);
 }

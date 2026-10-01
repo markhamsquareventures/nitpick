@@ -31,6 +31,13 @@ it('runs the reset command and the scenario setUp(), keeps the store, and logs i
         ->and(Mail::query()->count())->toBe(1);
 });
 
+it('answers the home of the persona as the redirect after a reset', function () {
+    postJson('/nitpick/reset', ['scenario' => 'demo-scenario', 'persona' => 'mia'])
+        ->assertOk()
+        ->assertJsonPath('user.email', 'mia@workbench.test')
+        ->assertJsonPath('redirect', '/?landing=mia');
+});
+
 it('runs only the reset command for a request that names an email', function () {
     postJson('/nitpick/reset', ['email' => 'arthur@workbench.test'])
         ->assertOk()

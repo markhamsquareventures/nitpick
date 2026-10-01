@@ -4,7 +4,7 @@ import { errorMessage, request } from './api.js';
 import { ConfirmButton } from './ConfirmButton.jsx';
 import { Icon } from './icons.jsx';
 import { Scroller } from './Scroller.jsx';
-import { reloadWithFocus } from './storage.js';
+import { openWithFocus } from './storage.js';
 
 const NO_ROUND = 'Start a round to record results and nits';
 
@@ -33,8 +33,8 @@ function LoginButton({ scenario, persona, current, focusKey, onFailure }) {
         setBusy(true);
 
         try {
-            await request('login', { method: 'POST', body: { scenario: scenario.slug, persona } });
-            reloadWithFocus(focusKey);
+            const { redirect } = await request('login', { method: 'POST', body: { scenario: scenario.slug, persona } });
+            openWithFocus(focusKey, redirect);
         } catch (error) {
             onFailure({ message: errorMessage(error) });
             setBusy(false);
@@ -74,8 +74,8 @@ function ResetButton({ scenario, persona, focusKey, onFailure }) {
         onFailure(null);
 
         try {
-            await request('reset', { method: 'POST', body: { scenario: scenario.slug, persona } });
-            reloadWithFocus(focusKey);
+            const { redirect } = await request('reset', { method: 'POST', body: { scenario: scenario.slug, persona } });
+            openWithFocus(focusKey, redirect);
         } catch (error) {
             onFailure({ message: errorMessage(error), output: error.data?.output });
         }

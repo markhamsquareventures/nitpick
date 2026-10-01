@@ -8,16 +8,20 @@ use MarkhamSq\Nitpick\Scenario;
 
 class LooseScenario extends Scenario
 {
-    /** @param Closure(Checklist): Checklist $build */
-    public function __construct(private Closure $build) {}
+    /**
+     * @param  Closure(Checklist): Checklist  $build
+     * @param  array<string, array{label: string, email: string, home?: string}>  $personas
+     */
+    public function __construct(
+        private Closure $build,
+        private array $personas = ['arthur' => ['label' => 'Arthur Admin', 'email' => 'nobody@acmecorp.test']],
+    ) {}
 
     public function setUp(): void {}
 
     public function personas(): array
     {
-        return [
-            'arthur' => ['label' => 'Arthur Admin', 'email' => 'nobody@acmecorp.test'],
-        ];
+        return $this->personas;
     }
 
     public function checklist(Checklist $checklist): Checklist

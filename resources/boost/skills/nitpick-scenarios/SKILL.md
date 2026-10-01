@@ -38,7 +38,7 @@ class AcmeCorpHeldInvitations extends Scenario
     public function personas(): array
     {
         return [
-            'arthur' => ['label' => 'Arthur Admin', 'email' => 'admin@acmecorp.test'],
+            'arthur' => ['label' => 'Arthur Admin', 'email' => 'admin@acmecorp.test', 'home' => '/teams/acme-corp/members'],
         ];
     }
 
@@ -64,6 +64,8 @@ class AcmeCorpHeldInvitations extends Scenario
 ### personas()
 
 Each key names a persona. Each value has a `label` and an `email`. The package finds the user by that email after `setUp()` runs.
+
+A value can also have a `home`, which is the path that the panel opens after a login or a reset as that persona. Set it to a page that the persona has permission to see, usually the first page of the persona's checks. A persona with no `home` opens `config('nitpick.home')`, which is `/` by default. A `home` must be a path that starts with one slash, for example `/dashboard`; `nitpick:scenarios` throws a `LogicException` for a full URL.
 
 ### checklist()
 

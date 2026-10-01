@@ -48,7 +48,7 @@ class ResetController extends LoginController
             }
         }
 
-        $response = $this->logIn($request, $this->personaEmail($request, $scenario));
+        $response = $this->logIn($request, $this->personaEmail($request, $scenario), $this->landingPage($request, $scenario));
 
         return $response->setData([...$response->getData(true), 'output' => $output]);
     }

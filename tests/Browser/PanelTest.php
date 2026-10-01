@@ -100,6 +100,7 @@ it('logs in from a section, starts a round, and saves a nit inline after two cli
         ->click('[data-focus-key="login:1:mia"]')
         ->waitForText('mia@workbench.test')
         ->assertSeeIn('#current-user', 'mia@workbench.test')
+        ->assertQueryStringHas('landing', 'mia')
         ->assertVisible('#qa-card')
         ->assertSeeIn('[data-focus-key="login:1:mia"]', 'Current')
         ->click('Start round')
@@ -131,7 +132,7 @@ it('logs in from a section, starts a round, and saves a nit inline after two cli
         ->round_id->toBe($round->id)
         ->item_key->toBe(itemKey($item))
         ->body->toBe('The pill wraps at 320px')
-        ->url->toBe('/')
+        ->url->toBe('/?landing=mia')
         ->persona->toBe('mia');
 });
 

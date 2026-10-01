@@ -69,6 +69,9 @@ return [
     // escape it: 'migrate:fresh --seeder='.addslashes(SomeSeeder::class).
     'reset_command' => 'migrate:fresh --seed',
 
+    // The path that the panel opens after a login. A persona's 'home' in personas() overrides it.
+    'home' => '/',
+
     'scenarios' => [
         'path' => base_path('tests/Scenarios'),
         'namespace' => 'Tests\\Scenarios',
@@ -106,7 +109,7 @@ class AcmeCorpHeldInvitations extends Scenario
     public function personas(): array
     {
         return [
-            'arthur' => ['label' => 'Arthur Admin', 'email' => 'admin@acmecorp.test'],
+            'arthur' => ['label' => 'Arthur Admin', 'email' => 'admin@acmecorp.test', 'home' => '/teams/acme-corp/members'],
         ];
     }
 
@@ -126,6 +129,10 @@ class AcmeCorpHeldInvitations extends Scenario
 
 A reset in the panel runs `reset_command`, then `setUp()`, then logs in as the persona. `setUp()`
 must make a user for each persona. `guest` is a persona that is not logged in.
+
+After a login or a reset, the panel opens the persona's `home`. A persona with no `home`, the
+`guest` persona, and a login by email open the `home` path in the config (default `/`). A `home`
+is a path on the app, for example `/dashboard`. `nitpick:scenarios` rejects a full URL.
 
 To check the scenarios for duplicate keys and personas that are not declared:
 

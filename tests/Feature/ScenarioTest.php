@@ -16,8 +16,8 @@ it('groups the plan example into sections, handoff steps, and retest blocks in c
         ->slug->toBe('acme-corp-held-invitations')
         ->title->toBe('Acme Corp held invitations')
         ->personas->toBe([
-            ['key' => 'arthur', 'label' => 'Arthur Admin', 'email' => 'admin@acmecorp.test'],
-            ['key' => 'andy', 'label' => 'Andy Admin', 'email' => 'andy@acmecorp.test'],
+            ['key' => 'arthur', 'label' => 'Arthur Admin', 'email' => 'admin@acmecorp.test', 'home' => null],
+            ['key' => 'andy', 'label' => 'Andy Admin', 'email' => 'andy@acmecorp.test', 'home' => null],
         ]);
 
     $groups = collect($scenario['groups']);
@@ -93,6 +93,36 @@ it('rejects a persona that personas() does not declare and names the scenario an
     'in a retest block' => [fn (Checklist $checklist) => $checklist
         ->retest(2, fn (Checklist $retest) => $retest
             ->as('bob', fn (Section $section) => $section->check('The page loads')))],
+]);
+
+it('gives the landing page of a persona from its home, or from the nitpick.home config', function () {
+    config(['nitpick.home' => '/start']);
+
+    $scenario = new LooseScenario(fn (Checklist $checklist) => $checklist, [
+        'arthur' => ['label' => 'Arthur Admin', 'email' => 'arthur@acmecorp.test', 'home' => '/teams/acme-corp/members?tab=held'],
+        'andy' => ['label' => 'Andy Admin', 'email' => 'andy@acmecorp.test'],
+    ]);
+
+    expect($scenario->landingPage('arthur'))->toBe('/teams/acme-corp/members?tab=held')
+        ->and($scenario->landingPage('andy'))->toBe('/start')
+        ->and($scenario->landingPage('guest'))->toBe('/start')
+        ->and($scenario->toArray()['personas'][1]['home'])->toBeNull();
+});
+
+it('rejects a home that is not a path and names the scenario, the persona, and the home', function (string $home) {
+    $scenario = new LooseScenario(fn (Checklist $checklist) => $checklist, [
+        'arthur' => ['label' => 'Arthur Admin', 'email' => 'arthur@acmecorp.test', 'home' => $home],
+    ]);
+    $message = 'The scenario '.LooseScenario::class." gives the persona 'arthur' the home '{$home}', which is not a path.";
+
+    expect(fn () => $scenario->toArray())->toThrow(LogicException::class, $message)
+        ->and(fn () => $scenario->landingPage('arthur'))->toThrow(LogicException::class, $message);
+})->with([
+    'a full URL' => 'https://other.test/dashboard',
+    'a protocol-relative URL' => '//other.test/dashboard',
+    'a backslash after the slash' => '/\\other.test',
+    'no leading slash' => 'dashboard',
+    'empty' => '',
 ]);
 
 it('accepts guest as a persona with no login', function () {

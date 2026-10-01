@@ -8,6 +8,9 @@ return [
     // escape it: 'migrate:fresh --seeder='.addslashes(SomeSeeder::class).
     'reset_command' => 'migrate:fresh --seed',
 
+    // The path that the panel opens after a login. A persona's 'home' in personas() overrides it.
+    'home' => '/',
+
     'scenarios' => [
         'path' => base_path('tests/Scenarios'),
         'namespace' => 'Tests\\Scenarios',

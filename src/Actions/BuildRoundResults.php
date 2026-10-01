@@ -17,7 +17,7 @@ class BuildRoundResults
 {
     public function __construct(private DiscoverScenarios $discoverScenarios) {}
 
-    /** @return array{round: array<string, mixed>, personas: list<array{key: string, label: string, email: string}>, groups: list<array<string, mixed>>, page_nits: list<array<string, mixed>>, orphaned: array{results: list<array{item_key: string, status: string}>, nits: list<array<string, mixed>>}} */
+    /** @return array{round: array<string, mixed>, personas: list<array{key: string, label: string, email: string, home: ?string}>, groups: list<array<string, mixed>>, page_nits: list<array<string, mixed>>, orphaned: array{results: list<array{item_key: string, status: string}>, nits: list<array<string, mixed>>}} */
     public function __invoke(Round $round): array
     {
         $scenario = $this->discoverScenarios->find($round->scenario);

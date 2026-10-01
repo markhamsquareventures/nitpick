@@ -18,9 +18,9 @@ it('prints the workbench demo scenario as JSON', function () {
         ->slug->toBe('demo-scenario')
         ->title->toBe('Demo scenario')
         ->personas->toBe([
-            ['key' => 'arthur', 'label' => 'Arthur Admin', 'email' => 'arthur@workbench.test'],
-            ['key' => 'mia', 'label' => 'Mia Member', 'email' => 'mia@workbench.test'],
-            ['key' => 'vera', 'label' => 'Vera Visitor', 'email' => 'vera@workbench.test'],
+            ['key' => 'arthur', 'label' => 'Arthur Admin', 'email' => 'arthur@workbench.test', 'home' => null],
+            ['key' => 'mia', 'label' => 'Mia Member', 'email' => 'mia@workbench.test', 'home' => '/?landing=mia'],
+            ['key' => 'vera', 'label' => 'Vera Visitor', 'email' => 'vera@workbench.test', 'home' => null],
         ]);
 
     $groups = collect($scenarios[0]['groups']);

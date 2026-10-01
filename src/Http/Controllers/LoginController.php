@@ -22,7 +22,7 @@ class LoginController extends LoginLinkController
     {
         $scenario = $this->requestedScenario($request, $discoverScenarios);
 
-        return $this->logIn($request, $this->personaEmail($request, $scenario));
+        return $this->logIn($request, $this->personaEmail($request, $scenario), $this->landingPage($request, $scenario));
     }
 
     /** Validates the request and returns the scenario that it names, or null when it names only an email. */
@@ -69,12 +69,26 @@ class LoginController extends LoginLinkController
         return $scenario->personas()[$request->input('persona')]['email'];
     }
 
-    protected function logIn(LoginLinkRequest $request, ?string $email): JsonResponse
+    /**
+     * Returns the path that the panel opens after the login. A login by email and the guest
+     * persona have no persona home, so they get the nitpick.home config.
+     */
+    protected function landingPage(LoginLinkRequest $request, ?Scenario $scenario): string
+    {
+        if ($scenario === null) {
+            return config()->string('nitpick.home', '/');
+        }
+
+        return $scenario->landingPage($request->string('persona')->toString());
+    }
+
+    /** Logs in the user with the email, or logs out for null. The JSON tells the panel which path to open. */
+    protected function logIn(LoginLinkRequest $request, ?string $email, string $redirect): JsonResponse
     {
         if ($email === null) {
             Auth::guard($request->guard)->logout();
 
-            return response()->json(['user' => null]);
+            return response()->json(['user' => null, 'redirect' => $redirect]);
         }
 
         $this->ensureAllowedEnvironment();
@@ -91,6 +105,6 @@ class LoginController extends LoginLinkController
 
         $this->performLogin($request->guard, $user);
 
-        return response()->json(['user' => ['id' => $user->getAuthIdentifier(), 'email' => $email]]);
+        return response()->json(['user' => ['id' => $user->getAuthIdentifier(), 'email' => $email], 'redirect' => $redirect]);
     }
 }

@@ -26,7 +26,7 @@ class DemoScenario extends Scenario
     {
         return [
             'arthur' => ['label' => 'Arthur Admin', 'email' => 'arthur@workbench.test'],
-            'mia' => ['label' => 'Mia Member', 'email' => 'mia@workbench.test'],
+            'mia' => ['label' => 'Mia Member', 'email' => 'mia@workbench.test', 'home' => '/?landing=mia'],
             'vera' => ['label' => 'Vera Visitor', 'email' => 'vera@workbench.test'],
         ];
     }

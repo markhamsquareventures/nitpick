@@ -17,7 +17,7 @@ class {{ class }} extends Scenario
     public function personas(): array
     {
         return [
-            'admin' => ['label' => 'Admin', 'email' => 'admin@example.test'],
+            'admin' => ['label' => 'Admin', 'email' => 'admin@example.test', 'home' => '/dashboard'],
         ];
     }
 

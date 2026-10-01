@@ -23,13 +23,31 @@ beforeEach(function () {
     seed(DatabaseSeeder::class);
 });
 
-it('logs in as a persona of a scenario', function () {
+it('logs in as a persona of a scenario and answers the nitpick.home config as the redirect', function () {
     postJson('http://qa-app.local/nitpick/login', ['scenario' => 'demo-scenario', 'persona' => 'arthur'])
         ->assertOk()
-        ->assertJsonPath('user.email', 'arthur@workbench.test');
+        ->assertJsonPath('user.email', 'arthur@workbench.test')
+        ->assertJsonPath('redirect', '/');
 
     assertAuthenticatedAs(User::query()->where('email', 'arthur@workbench.test')->sole());
 });
+
+it('answers the home of the persona as the redirect', function () {
+    postJson('http://qa-app.local/nitpick/login', ['scenario' => 'demo-scenario', 'persona' => 'mia'])
+        ->assertOk()
+        ->assertJsonPath('redirect', '/?landing=mia');
+});
+
+it('answers the nitpick.home config as the redirect for a login by email and for the guest persona', function (array $body) {
+    config(['nitpick.home' => '/start']);
+
+    postJson('http://qa-app.local/nitpick/login', $body)
+        ->assertOk()
+        ->assertJsonPath('redirect', '/start');
+})->with([
+    'by email' => [['email' => 'mia@workbench.test']],
+    'guest' => [['scenario' => 'demo-scenario', 'persona' => 'guest']],
+]);
 
 it('logs in as any user by email', function () {
     postJson('http://qa-app.local/nitpick/login', ['email' => 'nick@example.test'])

@@ -92,7 +92,7 @@ class MarkdownExporter implements RoundExporter
 
     /**
      * @param  array<string, mixed>  $group
-     * @param  array<string, array{key: string, label: string, email: string}>  $personas
+     * @param  array<string, array{key: string, label: string, email: string, home: ?string}>  $personas
      */
     private function groupHeading(array $group, array $personas): string
     {

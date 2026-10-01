@@ -27,7 +27,7 @@ use MarkhamSq\Nitpick\Models\Round;
  *         "opened_at": "2026-10-03T14:02:11+00:00", "closed_at": "2026-10-03T15:40:52+00:00",
  *         "git_sha": "a1b2c3d4e5f6a7b8c9d0a1b2c3d4e5f6a7b8c9d0", "git_dirty": true
  *     },
- *     "personas": [{"key": "arthur", "label": "Arthur Admin", "email": "admin@acmecorp.test"}],
+ *     "personas": [{"key": "arthur", "label": "Arthur Admin", "email": "admin@acmecorp.test", "home": null}],
  *     "groups": [
  *         {
  *             "type": "section", "title": null, "persona": "arthur", "retest": null,

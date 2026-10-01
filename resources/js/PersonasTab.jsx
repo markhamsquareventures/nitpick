@@ -2,7 +2,7 @@ import { useId, useRef, useState } from 'preact/hooks';
 import { errorMessage, request } from './api.js';
 import { Icon } from './icons.jsx';
 import { Scroller } from './Scroller.jsx';
-import { reloadWithFocus } from './storage.js';
+import { openWithFocus } from './storage.js';
 
 function UserRows({ rows, currentEmail, busy, onLogIn }) {
     return (
@@ -50,8 +50,8 @@ export function PersonasTab({ scenarios, scenario, user }) {
         setError(null);
 
         try {
-            await request('login', { method: 'POST', body });
-            reloadWithFocus(focusKey);
+            const { redirect } = await request('login', { method: 'POST', body });
+            openWithFocus(focusKey, redirect);
         } catch (failure) {
             setError(errorMessage(failure));
             setBusy(false);

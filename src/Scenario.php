@@ -11,7 +11,11 @@ abstract class Scenario
 {
     abstract public function setUp(): void;
 
-    /** @return array<string, array{label: string, email: string}> */
+    /**
+     * Each persona can set a home: the path that the panel opens after a login as that persona.
+     *
+     * @return array<string, array{label: string, email: string, home?: string}>
+     */
     abstract public function personas(): array;
 
     abstract public function checklist(Checklist $checklist): Checklist;
@@ -35,6 +39,20 @@ abstract class Scenario
         return $users;
     }
 
+    /** The path that the panel opens after a login as the persona: its home, or the nitpick.home config. */
+    public function landingPage(string $persona): string
+    {
+        $home = $this->personas()[$persona]['home'] ?? null;
+
+        if ($home === null) {
+            return config()->string('nitpick.home', '/');
+        }
+
+        $this->ensureHomeIsAPath($persona, $home);
+
+        return $home;
+    }
+
     /** Override this when the derived title loses a proper noun ("Acme corp" for "Acme Corp"). */
     public function title(): string
     {
@@ -54,7 +72,7 @@ abstract class Scenario
      *     class: class-string<static>,
      *     slug: string,
      *     title: string,
-     *     personas: list<array{key: string, label: string, email: string}>,
+     *     personas: list<array{key: string, label: string, email: string, home: ?string}>,
      *     groups: list<array{
      *         type: 'section'|'handoff',
      *         title: ?string,
@@ -129,7 +147,13 @@ abstract class Scenario
         $personas = [];
 
         foreach ($this->personas() as $key => $persona) {
-            $personas[] = ['key' => $key, 'label' => $persona['label'], 'email' => $persona['email']];
+            $home = $persona['home'] ?? null;
+
+            if ($home !== null) {
+                $this->ensureHomeIsAPath($key, $home);
+            }
+
+            $personas[] = ['key' => $key, 'label' => $persona['label'], 'email' => $persona['email'], 'home' => $home];
         }
 
         return [
@@ -152,5 +176,15 @@ abstract class Scenario
         }
 
         throw new LogicException('The scenario '.static::class." uses the persona '{$persona}', but personas() does not declare it. Declare it in personas(), or use 'guest' for no login.");
+    }
+
+    /** A home must stay on the app, so it is a path: one leading slash, no scheme, no host. */
+    private function ensureHomeIsAPath(string $persona, string $home): void
+    {
+        if (preg_match('#^/(?![/\\\\])#', $home) === 1) {
+            return;
+        }
+
+        throw new LogicException('The scenario '.static::class." gives the persona '{$persona}' the home '{$home}', which is not a path. Use a path that starts with one slash, for example '/dashboard'.");
     }
 }

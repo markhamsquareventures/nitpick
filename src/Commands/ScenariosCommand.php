@@ -22,7 +22,7 @@ use MarkhamSq\Nitpick\Scenario;
  *         "slug": "acme-corp-held-invitations",
  *         "title": "Acme corp held invitations",
  *         "personas": [
- *             {"key": "arthur", "label": "Arthur Admin", "email": "admin@acmecorp.test"}
+ *             {"key": "arthur", "label": "Arthur Admin", "email": "admin@acmecorp.test", "home": "/teams/acme-corp/members"}
  *         ],
  *         "groups": [
  *             {
