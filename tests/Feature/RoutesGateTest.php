@@ -6,6 +6,7 @@ $packageRoutes = [
     'login' => ['POST', 'nitpick/login'],
     'users' => ['GET', 'nitpick/users?search=a'],
     'reset' => ['POST', 'nitpick/reset'],
+    'fill' => ['POST', 'nitpick/fill'],
     'mails' => ['GET', 'nitpick/mails'],
     'mail html' => ['GET', 'nitpick/mails/1'],
     'queue size' => ['GET', 'nitpick/queue'],

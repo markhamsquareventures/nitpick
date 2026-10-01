@@ -692,25 +692,64 @@ button.item-toggle:hover .check-text {
     text-underline-offset: 4px;
 }
 
-.goto {
+.goto,
+.fill {
     display: flex;
     flex: none;
     align-items: center;
     justify-content: center;
     width: var(--qa-target);
     height: var(--qa-target);
+    padding: 0;
+    border: 0;
     border-radius: var(--qa-radius-control);
+    background: transparent;
     color: var(--qa-text-muted);
     transition: background-color 120ms ease;
 }
 
-.goto:hover {
+.goto:hover,
+.fill:hover {
     background: var(--qa-raised);
     color: var(--qa-text);
 }
 
-.item-error {
+/* aria-disabled, not disabled, so that the button keeps the focus while the fill runs. */
+.fill[aria-disabled='true'] {
+    background: transparent;
+    color: var(--qa-text-muted);
+    cursor: progress;
+    opacity: 0.5;
+}
+
+/* The fill notice and the fill failure start at the left edge of the item text, the same as the item error. */
+.item-error,
+.fill-notice,
+.item-failure {
     padding: 0 var(--qa-space-3) var(--qa-space-3) var(--qa-target-sm);
+}
+
+/* The live region stays in the tree while it is empty, so that a screen reader announces the first notice. */
+.fill-notice:empty {
+    padding: 0;
+}
+
+.fill-lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--qa-space-1);
+    margin: 0;
+    padding: 0;
+    color: var(--qa-text-muted);
+    font-size: var(--qa-text-sm);
+    line-height: var(--qa-leading-sm);
+    list-style: none;
+    overflow-wrap: anywhere;
+}
+
+.fill-summary,
+.fill-key {
+    color: var(--qa-text);
 }
 
 /* The nits of an item and its nit field. The block runs the full width of the card, at the same

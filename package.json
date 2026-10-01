@@ -3,13 +3,16 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "esbuild resources/js/panel.jsx --bundle --minify --format=iife --target=es2022 --jsx=automatic --jsx-import-source=preact --loader:.css=text --outfile=dist/panel.js"
+        "build": "esbuild resources/js/panel.jsx --bundle --minify --format=iife --target=es2022 --jsx=automatic --jsx-import-source=preact --loader:.css=text --outfile=dist/panel.js",
+        "build:workbench": "esbuild workbench/resources/js/react-form.jsx --bundle --minify --format=iife --target=es2022 --jsx=automatic --outfile=workbench/resources/dist/react-form.js"
     },
     "dependencies": {
         "preact": "^10.29.8"
     },
     "devDependencies": {
         "esbuild": "^0.28.2",
-        "playwright": "^1.63.0"
+        "playwright": "^1.63.0",
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0"
     }
 }

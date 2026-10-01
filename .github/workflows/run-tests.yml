@@ -10,6 +10,7 @@ on:
       - 'composer.lock'
       - 'resources/js/**'
       - 'dist/**'
+      - 'workbench/**'
       - 'package.json'
       - 'package-lock.json'
   pull_request:
@@ -21,6 +22,7 @@ on:
       - 'composer.lock'
       - 'resources/js/**'
       - 'dist/**'
+      - 'workbench/**'
       - 'package.json'
       - 'package-lock.json'
 
@@ -32,7 +34,7 @@ jobs:
   dist:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    name: dist/ is current
+    name: bundles are current
 
     steps:
       - name: Checkout code
@@ -44,13 +46,14 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Build the panel
+      - name: Build the panel and the workbench React form
         run: |
           npm ci
           npm run build
+          npm run build:workbench
 
-      - name: Fail if the committed dist/ is not the build output
-        run: git diff --exit-code dist/
+      - name: Fail if a committed bundle is not the build output
+        run: git diff --exit-code dist/ workbench/resources/dist/
 
   test:
     runs-on: ${{ matrix.os }}

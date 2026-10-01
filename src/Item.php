@@ -2,6 +2,8 @@
 
 namespace MarkhamSq\Nitpick;
 
+use Closure;
+
 final readonly class Item
 {
     public string $key;
@@ -12,6 +14,7 @@ final readonly class Item
         public ?string $url = null,
         public ?string $setup = null,
         ?string $key = null,
+        public array|Closure|null $fill = null,
     ) {
         // Results are stored by key, so the default key must not change when the source is
         // rewrapped or indented. It hashes the text with its whitespace collapsed.

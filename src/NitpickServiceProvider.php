@@ -12,6 +12,7 @@ use MarkhamSq\Nitpick\Commands\InstallCommand;
 use MarkhamSq\Nitpick\Commands\MakeScenarioCommand;
 use MarkhamSq\Nitpick\Commands\ResultsCommand;
 use MarkhamSq\Nitpick\Commands\ScenariosCommand;
+use MarkhamSq\Nitpick\Http\Controllers\FillController;
 use MarkhamSq\Nitpick\Http\Controllers\LoginController;
 use MarkhamSq\Nitpick\Http\Controllers\MailsController;
 use MarkhamSq\Nitpick\Http\Controllers\NitsController;
@@ -81,6 +82,11 @@ class NitpickServiceProvider extends PackageServiceProvider
          *                           of the named scenario (none for an email), then logs in
          *                           -> {user, redirect, output}; 500 {message, output} if the command or setUp()
          *                           fails; 422 if setUp() did not make the persona's user
+         * POST nitpick/fill       {scenario: slug, item: key}; runs the fill of the item, and its Closures,
+         *                           on each request -> {fields: [{key: selector, value}]} in declaration order.
+         *                           value is a string, a bool, or a list of strings; a null value is left out.
+         *                           422 for an unknown scenario or item, an item with no fill, or a value
+         *                           of a type that a form cannot take; 500 {message, output} if a Closure throws
          * GET  nitpick/mails      -> {data: [{id, round_id, to, subject, text, links, sent_at}]}, newest first
          * GET  nitpick/mails/{id} -> the mail's HTML, with a CSP sandbox header
          * GET  nitpick/queue      -> {size}, the jobs on the default queue connection
@@ -113,6 +119,7 @@ class NitpickServiceProvider extends PackageServiceProvider
                 Route::get('user', [UserController::class, 'show'])->name('user.show');
                 Route::post('login', [LoginController::class, 'store'])->name('login.store');
                 Route::get('users', [UsersController::class, 'index'])->name('users.index');
+                Route::apiResource('fill', FillController::class)->only('store');
                 Route::post('reset', [ResetController::class, 'store'])->name('reset.store');
                 Route::get('mails', [MailsController::class, 'index'])->name('mails.index');
                 Route::get('mails/{mail}', [MailsController::class, 'show'])->name('mails.show');

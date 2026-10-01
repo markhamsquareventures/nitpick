@@ -36,7 +36,39 @@ class DemoScenario extends Scenario
         return $checklist
             ->as('arthur', fn (Section $section) => $section
                 ->check('The start page loads', url: '/')
-                ->check('The panel shows Arthur Admin as the current persona', url: '/', setup: 'Log in as Arthur from the Personas tab'))
+                ->check('The panel shows Arthur Admin as the current persona', url: '/', setup: 'Log in as Arthur from the Personas tab')
+                ->check('The form page takes a filled form', url: '/form', key: 'fill-static', fill: [
+                    'name' => 'Ada Lovelace',
+                    'email' => 'ada@example.test',
+                    'password' => 'secret-pass',
+                    'age' => 36,
+                    'birthday' => '2030-01-15',
+                    'bio' => "First line\nSecond line",
+                    'country' => 'ca',
+                    'languages[]' => ['en', 'fr'],
+                    'plan' => 'pro',
+                    'roles[]' => ['admin', 'viewer'],
+                    'terms' => true,
+                    'avatar' => 'photo.png',
+                    'nickname' => 'countess',
+                    'phone' => '555-0100',
+                    'coupon' => 'SPRING',
+                ])
+                ->check('The form page takes a new fake value on each fill', url: '/form', key: 'fill-per-value', fill: [
+                    'nickname' => fn () => fake()->uuid(),
+                    'email' => 'fixed@example.test',
+                ])
+                ->check('The form page takes a fill that one Closure makes', url: '/form', key: 'fill-closure', fill: fn () => [
+                    'name' => fake()->name(),
+                    'email' => fake()->safeEmail(),
+                ])
+                ->check('The React form page keeps a filled form after a render', url: '/react-form', key: 'fill-react', fill: [
+                    'name' => fn () => fake()->name(),
+                    'country' => 'mx',
+                    'subscribed' => true,
+                    'tier' => 'team',
+                    'coupon' => 'SPRING',
+                ]))
             ->as('mia', fn (Section $section) => $section
                 ->check('The panel shows Mia Member as the current persona', url: '/'))
             ->handoff('Mia hands off to a guest', fn (Handoff $handoff) => $handoff

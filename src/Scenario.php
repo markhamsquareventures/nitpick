@@ -2,6 +2,7 @@
 
 namespace MarkhamSq\Nitpick;
 
+use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -78,7 +79,7 @@ abstract class Scenario
      *         title: ?string,
      *         persona: ?string,
      *         retest: ?int,
-     *         items: list<array{key: string, text: string, url: ?string, setup: ?string, persona: string}>
+     *         items: list<array{key: string, text: string, url: ?string, setup: ?string, persona: string, fill: ?list<string>}>
      *     }>
      * }
      */
@@ -140,6 +141,7 @@ abstract class Scenario
                     'url' => $item->url,
                     'setup' => $item->setup,
                     'persona' => $item->persona,
+                    'fill' => $this->fillKeys($item),
                 ], $items),
             ];
         }
@@ -163,6 +165,36 @@ abstract class Scenario
             'personas' => $personas,
             'groups' => $groups,
         ];
+    }
+
+    /** The item with the key, from any section or handoff, or null. */
+    public function item(string $key): ?Item
+    {
+        foreach ($this->checklist(new Checklist)->groups as ['group' => $group]) {
+            $items = $group instanceof Section ? $group->items : array_filter($group->entries, fn ($entry) => $entry instanceof Item);
+
+            foreach ($items as $item) {
+                if ($item->key === $key) {
+                    return $item;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /** The keys of the fill, with no values. A fill that is one Closure has no known keys, so it gives an empty list. */
+    private function fillKeys(Item $item): ?array
+    {
+        if ($item->fill === null) {
+            return null;
+        }
+
+        if ($item->fill instanceof Closure) {
+            return [];
+        }
+
+        return array_map('strval', array_keys($item->fill));
     }
 
     private function ensurePersonaIsDeclared(string $persona): void

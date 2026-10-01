@@ -1,7 +1,8 @@
 import { Fragment } from 'preact';
-import { useId, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { errorMessage, request } from './api.js';
 import { ConfirmButton } from './ConfirmButton.jsx';
+import { fillForm } from './fill.js';
 import { Icon } from './icons.jsx';
 import { Scroller } from './Scroller.jsx';
 import { openWithFocus } from './storage.js';
@@ -229,12 +230,60 @@ function nitCount(count) {
     return count === 1 ? '1 nit' : `${count} nits`;
 }
 
+/**
+ * The result of the last fill of an item. A status region reads all of its text on each change,
+ * so the summary comes first, then each filled key and its value, then the keys that need attention.
+ */
+function FillNotice({ report }) {
+    const { total, filled, problems, several, missing } = report;
+    let summary = `Filled ${filled.length} of ${total} fields.`;
+
+    if (total === 0) {
+        summary = 'The fill has no fields.';
+    }
+
+    return (
+        <ul class="fill-lines">
+            <li class="fill-summary">{summary}</li>
+            {filled.map(({ key, value }) => (
+                <li key={key}>
+                    <code class="fill-key">{key}</code> {value}
+                </li>
+            ))}
+            {problems.map(({ key, message }) => (
+                <li key={key}>
+                    <code class="fill-key">{key}</code> Not filled. {message}
+                </li>
+            ))}
+            {several.map(({ key, count }) => (
+                <li key={key}>
+                    {count} matches for <code class="fill-key">{key}</code>. Nitpick filled the first.
+                </li>
+            ))}
+            {missing.length > 0 && (
+                <li>
+                    Not found:{' '}
+                    {missing.map((key, index) => (
+                        <Fragment key={key}>
+                            {index > 0 && ', '}
+                            <code class="fill-key">{key}</code>
+                        </Fragment>
+                    ))}
+                </li>
+            )}
+        </ul>
+    );
+}
+
 function ChecklistItem({ scenario, item, round, result, onRoundChange }) {
     // The status of the last click. It shows in place of the server status until the item's
     // last write has an answer, so a slow answer never takes the box back to an older click.
     const [desired, setDesired] = useState(null);
     const [expanded, setExpanded] = useState(false);
     const [failure, setFailure] = useState(null);
+    const [filling, setFilling] = useState(false);
+    const [fillReport, setFillReport] = useState(null);
+    const [fillFailure, setFillFailure] = useState(null);
     const latest = useRef(null);
     const queued = useRef(false);
     const focusNit = useRef(false);
@@ -250,6 +299,43 @@ function ChecklistItem({ scenario, item, round, result, onRoundChange }) {
             nitInput.current?.focus();
         }
     }, [expanded]);
+
+    // A fill notice is about the current page. A full page load clears it; an Inertia or a
+    // Livewire visit keeps the panel, so the notice clears on their navigation events.
+    useEffect(() => {
+        if (fillReport === null) {
+            return;
+        }
+
+        const clear = () => setFillReport(null);
+        document.addEventListener('inertia:navigate', clear);
+        document.addEventListener('livewire:navigated', clear);
+
+        return () => {
+            document.removeEventListener('inertia:navigate', clear);
+            document.removeEventListener('livewire:navigated', clear);
+        };
+    }, [fillReport]);
+
+    // Fill needs no open round. The server runs the fill on each press, so a fake() value is new each time.
+    const fill = async () => {
+        if (filling) {
+            return;
+        }
+
+        setFilling(true);
+        setFillReport(null);
+        setFillFailure(null);
+
+        try {
+            const { fields } = await request('fill', { method: 'POST', body: { scenario: scenario.slug, item: item.key } });
+            setFillReport(fillForm(fields));
+        } catch (error) {
+            setFillFailure({ message: errorMessage(error), output: error.data?.output });
+        }
+
+        setFilling(false);
+    };
 
     // Clicks that come while a write of this item waits in the queue only change the target of
     // that write, so the server gets the last click and not every click.
@@ -335,12 +421,34 @@ function ChecklistItem({ scenario, item, round, result, onRoundChange }) {
                         </span>
                     )}
                 </button>
+                {item.fill !== null && (
+                    <button
+                        type="button"
+                        class="fill"
+                        aria-label={`Fill the form for: ${item.text}`}
+                        title={`Fill the form for: ${item.text}`}
+                        aria-disabled={filling}
+                        onClick={fill}
+                    >
+                        <Icon name="textCursorInput" />
+                    </button>
+                )}
                 {item.url && (
                     <a class="goto" href={item.url} aria-label={`Go to ${item.url}`} title={`Go to ${item.url}`}>
                         <Icon name="arrowRight" />
                     </a>
                 )}
             </div>
+            {item.fill !== null && (
+                <div role="status" class="fill-notice">
+                    {fillReport && <FillNotice report={fillReport} />}
+                </div>
+            )}
+            {fillFailure && (
+                <div class="item-failure">
+                    <Failure failure={fillFailure} />
+                </div>
+            )}
             {failure && (
                 <p role="alert" class="text error item-error">
                     {failure}

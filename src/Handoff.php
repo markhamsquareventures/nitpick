@@ -2,6 +2,8 @@
 
 namespace MarkhamSq\Nitpick;
 
+use Closure;
+
 final class Handoff
 {
     /**
@@ -14,9 +16,9 @@ final class Handoff
 
     public function __construct(public readonly string $title) {}
 
-    public function step(string $persona, string $text, ?string $url = null, ?string $setup = null, ?string $key = null): self
+    public function step(string $persona, string $text, ?string $url = null, ?string $setup = null, ?string $key = null, array|Closure|null $fill = null): self
     {
-        $this->entries[] = new Item($persona, $text, $url, $setup, $key);
+        $this->entries[] = new Item($persona, $text, $url, $setup, $key, $fill);
 
         return $this;
     }

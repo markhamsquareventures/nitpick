@@ -23,6 +23,7 @@ Nitpick is a package for manual QA of a Laravel app. A scenario is one PHP class
 3. Fill in the three methods. An example:
 
 ```php
+use Illuminate\Support\Str;
 use MarkhamSq\Nitpick\Checklist;
 use MarkhamSq\Nitpick\Handoff;
 use MarkhamSq\Nitpick\Scenario;
@@ -49,7 +50,10 @@ class AcmeCorpHeldInvitations extends Scenario
                 ->check('Acme Corp is listed and there is no invitation alert', url: '/home')
                 ->check('Per-row Send on Ursula: toast "Invitation sent."', url: '/teams/acme-corp/members', setup: 'Ursula is Not sent'))
             ->handoff('Invited admin registers', fn (Handoff $handoff) => $handoff
-                ->step('arthur', 'Add member with a fresh address')
+                ->step('arthur', 'Add member with a fresh address', url: '/teams/acme-corp/members', fill: [
+                    'email' => fn () => 'invitee+'.Str::random(6).'@acme.test',
+                    'role' => 'member',
+                ])
                 ->switchTo('guest')
                 ->step('guest', 'Open the invitation link from the mail pane'));
     }
@@ -71,14 +75,36 @@ A value can also have a `home`, which is the path that the panel opens after a l
 
 Write one check for each thing the diff changed, or each thing the diff could break. Keep a scenario to checks only. Do not put build decisions, migrations, or feature logic in it, beyond what `setUp()` needs to create test data.
 
-- `$checklist->as('persona', fn (Section $section) => ...)` groups checks under one persona. `$section->check($text, url: null, setup: null, key: null)` adds one check. `$text` names the behavior to check. `$url` is the path to open in the browser, for example `/home`. `$setup` is a one-line note on the state the check needs, for example `'Ursula is Not sent'`; it does not set that state, `setUp()` does.
-- `$checklist->handoff('title', fn (Handoff $handoff) => ...)` holds an ordered sequence across personas, such as an invite-and-register flow. `$handoff->step('persona', $text, url: null, setup: null, key: null)` adds one step. `$handoff->switchTo('persona')` logs the tester in as a persona before the next step. A `switchTo()` call must be followed by a `step()` for that same persona.
+- `$checklist->as('persona', fn (Section $section) => ...)` groups checks under one persona. `$section->check($text, url: null, setup: null, key: null, fill: null)` adds one check. `$text` names the behavior to check. `$url` is the path to open in the browser, for example `/home`. `$setup` is a one-line note on the state the check needs, for example `'Ursula is Not sent'`; it does not set that state, `setUp()` does.
+- `$checklist->handoff('title', fn (Handoff $handoff) => ...)` holds an ordered sequence across personas, such as an invite-and-register flow. `$handoff->step('persona', $text, url: null, setup: null, key: null, fill: null)` adds one step. `$handoff->switchTo('persona')` logs the tester in as a persona before the next step. A `switchTo()` call must be followed by a `step()` for that same persona.
 - `guest` is a valid persona name in a section or a step. It means no login.
 - `$checklist->retest($number, fn (Checklist $retest) => ...)` holds the checks for one retest round. See "Add a retest block" below. A `retest()` block cannot hold another `retest()` block.
 
 An item's key is the first 12 hex characters of the SHA-256 hash of its text (trimmed, with runs of whitespace collapsed to one space), or the `key:` argument when given. Two items in one scenario must not share a key; `nitpick:scenarios` throws when they do. Changing the text of an existing check changes its key and orphans its old results, so give a check a `key:` when its text is likely to change later.
 
 Two scenario classes with the same basename conflict: the slug (the class basename in kebab case) names the rounds and the report directory, so `nitpick:scenarios` throws when two scenarios share one.
+
+### Fill a form
+
+Add a `fill:` to a check or a step that needs typed data, for example a create form or a registration form. `fill:` is the last argument. It adds a Fill button to the item in the panel. A click fills the form on the current page. It never submits the form. It does not need an open round.
+
+- `fill:` takes an array of `key => value`. It can also take one Closure that returns the whole array.
+- Use the field `name` as the key, for example `email`, `team[name]` or `roles[]`. The panel matches `[name="..."]`, then `#...`. Use any other CSS selector only when a field has no `name` or `id`.
+- The panel fills the first visible match. It fills a `type="hidden"` input only when no visible field matches. A radio group or a checkbox group with one name is one field.
+- A value is a string, a number, a bool, `null`, a list of strings, or a Closure that returns one of these. The server runs each Closure on each click, so `fake()` gives a new value each time.
+- A string or a number sets the field, and `''` clears it. `true` checks a checkbox and `false` unchecks it. `null` skips the key. A list selects the options of a `<select multiple>` or checks the boxes of a checkbox group. For a radio group, the value selects the radio that has that value. A file input cannot be filled.
+- A Closure can call a factory. Always call `withoutParents()`. Without it, `raw()` creates the parent rows in the database.
+
+  ```php
+  ->check('Add a member', url: '/teams/acme-corp/members', fill: fn () => Arr::only(
+      User::factory()->withoutParents()->raw(), ['name', 'email'],
+  ))
+  ```
+
+- A fill never sets database state. `setUp()` makes the state. Do not create a model inside a fill Closure.
+- `fake()->unique()` resets on each request, so a value can repeat across clicks. Use `Str::random()` or a timestamp when a repeat blocks the check.
+- The panel sends no `blur` event. Livewire `wire:model.blur` does not see the value until the field loses focus. The panel cannot fill a field inside a shadow DOM of the app.
+- A Closure that throws shows as a failure under the row, with its message.
 
 ## Read the results of a round
 
@@ -119,7 +145,7 @@ A round checks the base groups (every group outside a `retest()` block) plus the
 php artisan nitpick:scenarios --json
 ```
 
-A clean exit confirms two things: every key in the scenario is unique, and every persona the checklist uses is declared in `personas()`. `nitpick:scenarios` throws a `LogicException` naming the scenario and the conflict when either check fails. Read the new `retest` group in the output and confirm it carries the right number.
+A clean exit confirms two things: every key in the scenario is unique, and every persona the checklist uses is declared in `personas()`. `nitpick:scenarios` throws a `LogicException` naming the scenario and the conflict when either check fails. Each item in the output has a `fill` field. It is `null` when the item has no fill, the list of keys for an array fill, and `[]` for a fill that is one Closure. It never holds values. Read the new `retest` group in the output and confirm it carries the right number.
 
 Then write or run a Pest test that uses the scenario:
 

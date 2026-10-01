@@ -2,6 +2,14 @@
 
 All notable changes to `nitpick` will be documented in this file.
 
+## 0.3.0 - 2026-10-01
+
+- A check or a handoff step can have a `fill:` argument. Its Fill button fills the form on the current page with fixed values or with Closures such as `fake()`. It never submits the form.
+- A key in `fill:` is a field `name`, an `id`, or a CSS selector. A value can be a string, a number, a bool, `null`, or a list.
+- After a fill, the row shows what the panel filled, the keys that it did not find, and the values that a field did not take.
+- `nitpick:scenarios --json` gives each item a `fill` field.
+- A new `nitpick/fill` route runs the fill of an item. It exists only in the local environment.
+
 ## 0.2.0 - 2026-10-01
 
 - A persona can set a `home` in `personas()`. After a login or a reset, the panel opens that path, not the page it was on.

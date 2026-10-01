@@ -38,6 +38,7 @@ it('prints the workbench demo scenario as JSON', function () {
         'url' => '/',
         'setup' => null,
         'persona' => 'arthur',
+        'fill' => null,
     ]);
 
     expect(collect($groups[2]['items'])->pluck('persona')->all())->toBe(['mia', 'guest'])

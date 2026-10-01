@@ -22,7 +22,8 @@ npx playwright install chromium
    ```
 
 3. If you changed a file in `resources/js/`, run `npm run build` and commit `dist/`. CI fails when
-   `dist/` is not the build output.
+   `dist/` is not the build output. If you changed a file in `workbench/resources/js/`, run
+   `npm run build:workbench` and commit `workbench/resources/dist/`. CI checks it the same way.
 4. Add a line to `CHANGELOG.md` for a change that users can see.
 
 One pull request holds one change.

@@ -14,7 +14,8 @@ use MarkhamSq\Nitpick\Scenario;
  *
  * The --json output is a list with one object for each scenario, sorted by class. A retest(n)
  * block does not nest: each of its groups has "retest": n. A handoff step with no login has
- * "persona": "guest". An example:
+ * "persona": "guest". "fill" is null for an item with no fill, the list of selectors for
+ * a fill array, and an empty list for a fill that is one Closure. It never holds values. An example:
  *
  * [
  *     {
@@ -31,7 +32,7 @@ use MarkhamSq\Nitpick\Scenario;
  *                 "persona": "arthur",
  *                 "retest": null,
  *                 "items": [
- *                     {"key": "7670b7c4fb40", "text": "Acme Corp is listed", "url": "/home", "setup": null, "persona": "arthur"}
+ *                     {"key": "7670b7c4fb40", "text": "Acme Corp is listed", "url": "/home", "setup": null, "persona": "arthur", "fill": null}
  *                 ]
  *             },
  *             {
@@ -40,7 +41,7 @@ use MarkhamSq\Nitpick\Scenario;
  *                 "persona": null,
  *                 "retest": 2,
  *                 "items": [
- *                     {"key": "open-invite", "text": "Open the invitation link", "url": null, "setup": null, "persona": "guest"}
+ *                     {"key": "open-invite", "text": "Open the invitation link", "url": null, "setup": null, "persona": "guest", "fill": ["#email", "#terms"]}
  *                 ]
  *             }
  *         ]

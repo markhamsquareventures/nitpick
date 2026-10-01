@@ -94,6 +94,7 @@ php artisan make:nitpick-scenario AcmeCorpHeldInvitations
 This command writes a stub to `tests/Scenarios`. Fill in the three methods:
 
 ```php
+use Illuminate\Support\Str;
 use MarkhamSq\Nitpick\Checklist;
 use MarkhamSq\Nitpick\Handoff;
 use MarkhamSq\Nitpick\Scenario;
@@ -120,7 +121,10 @@ class AcmeCorpHeldInvitations extends Scenario
                 ->check('Acme Corp is listed and there is no invitation alert', url: '/home')
                 ->check('Per-row Send on Ursula: toast "Invitation sent."', url: '/teams/acme-corp/members', setup: 'Ursula is Not sent'))
             ->handoff('Invited admin registers', fn (Handoff $handoff) => $handoff
-                ->step('arthur', 'Add member with a fresh address')
+                ->step('arthur', 'Add member with a fresh address', url: '/teams/acme-corp/members', fill: [
+                    'email' => fn () => 'invitee+'.Str::random(6).'@acme.test',
+                    'role' => 'member',
+                ])
                 ->switchTo('guest')
                 ->step('guest', 'Open the invitation link from the mail pane'));
     }
@@ -134,11 +138,69 @@ After a login or a reset, the panel opens the persona's `home`. A persona with n
 `guest` persona, and a login by email open the `home` path in the config (default `/`). A `home`
 is a path on the app, for example `/dashboard`. `nitpick:scenarios` rejects a full URL.
 
+### Fill a form
+
+A check that needs typed data can have a `fill:` argument. It is the last argument of `check()` and
+`step()`. Each item with a `fill:` has a Fill button in the panel, next to Go to. A click fills the
+form on the current page. It never submits the form. It does not need an open round.
+
+`fill:` takes an array of `key => value`. It can also take one Closure that returns the whole array.
+A value is a string, a number, a bool, `null`, a list of strings, or a Closure that returns one of
+these. The panel runs each Closure again on each click, so `fake()` gives a new value each time.
+
+A key finds a field:
+
+- A bare name, for example `email`, `team[name]` or `roles[]`, matches `[name="..."]`, then `#...`.
+- Any other key is a CSS selector.
+- The panel fills the first visible match. It fills a `type="hidden"` input only when no visible
+  field matches.
+- A radio group or a checkbox group with one name is one field.
+
+A value fills a field as follows:
+
+- A string or a number sets the field. `''` clears it.
+- `true` checks a checkbox. `false` unchecks it.
+- `null` skips the key.
+- A list selects the options of a `<select multiple>` or checks the boxes of a checkbox group.
+- For a radio group, the value selects the radio that has that value.
+- A file input cannot be filled.
+
+A Closure can call a factory:
+
+```php
+use Illuminate\Support\Arr;
+
+->check('Add a member', url: '/teams/acme-corp/members', fill: fn () => Arr::only(
+    User::factory()->withoutParents()->raw(), ['name', 'email'],
+))
+```
+
+Always call `withoutParents()` on a factory in a fill. Without it, `raw()` creates the parent rows
+in the database. A fill must not write to the database. `setUp()` makes the state.
+
+After a click, the row shows what the panel filled (it masks passwords). It also shows the keys that
+it did not find, the values that a field did not take, and a note when several visible fields match
+one key. A Closure that throws shows as a failure under the row, with its message.
+
+The panel sets text fields and selects with the native value setter, then sends `input` and
+`change` events. It clicks a checkbox or a radio when its state must change. Plain forms and
+React controlled inputs are tested. Vue, Alpine, and Livewire `wire:model` listen for the same
+`input` and `change` events, but they are not tested. These limits apply:
+
+- The panel sends no `blur` event. Livewire `wire:model.blur` does not see the value until the field
+  loses focus.
+- The panel cannot fill a field inside a shadow DOM of the app.
+- `fake()->unique()` resets on each request, so a value can repeat across clicks. When a repeat
+  blocks the check, use `Str::random()` or a timestamp.
+
 To check the scenarios for duplicate keys and personas that are not declared:
 
 ```bash
 php artisan nitpick:scenarios --json
 ```
+
+Each item in the output has a `fill` field. It is `null` when the item has no fill, the list of keys
+for an array fill, and `[]` for a fill that is one Closure. It never holds values.
 
 The same scenario can set up a Pest test:
 
@@ -216,6 +278,10 @@ and commit `dist/`. CI fails when `dist/` is not the build output.
 ```bash
 npm run build
 ```
+
+The browser tests load a React form from the workbench. Its bundle is `workbench/resources/dist/react-form.js`.
+It is also committed. After a change in `workbench/resources/js/`, build it again with
+`npm run build:workbench`. CI fails when it is not the build output.
 
 ## Changelog
 
