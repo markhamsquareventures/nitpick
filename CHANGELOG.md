@@ -2,6 +2,15 @@
 
 All notable changes to `nitpick` will be documented in this file.
 
+## 0.4.0 - 2026-10-02
+
+- In a round with a `retest(n)` block, the Checklist tab shows only that block. The base checks are under a **Full checklist** toggle. You can still mark them in that round. The toggle stays open or closed through a login or a reset.
+- A new History tab lists the closed rounds of the scenario, with the date, the git SHA, and the pass, fail, and nit counts. Open a round to see its failed checks, its nits, and its page nits.
+- The Markdown report and `nitpick:results --json` are short. They list the failed checks, the checks with nits, and the untested checks of the work. The other passed checks are a count per group (`passed`), and the base checks with no result in a retest round are one count (`base_not_tested`).
+- `nitpick:results --json --full` prints every check of the round in the old shape.
+- The tab bar shows only icons. Each tab has its name as its accessible name and as a tooltip.
+- New `GET nitpick/rounds?scenario=` and `GET nitpick/rounds/{round}` routes feed the History tab. They exist only in the local environment.
+
 ## 0.3.0 - 2026-10-01
 
 - A check or a handoff step can have a `fill:` argument. Its Fill button fills the form on the current page with fixed values or with Closures such as `fake()`. It never submits the form.

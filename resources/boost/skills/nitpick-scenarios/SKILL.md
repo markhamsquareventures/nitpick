@@ -114,14 +114,17 @@ php artisan nitpick:results {scenario-slug} --round=latest --json
 
 `{scenario-slug}` is the `slug` field from `nitpick:scenarios --json`, for example `acme-corp-held-invitations`. `--round=latest` reads the newest round, open or closed. A round number, for example `--round=2`, reads that specific round.
 
-The JSON has these top-level keys:
+The JSON is short. It keeps only the items that need work. The work of round n is its `retest(n)` groups when the scenario has them. In a round with no `retest(n)` block, the work is all the groups. The JSON has these top-level keys:
 
 - `round`: `number`, `status` (`open` or `closed`), `tester`, `opened_at`, `closed_at`, `git_sha`, `git_dirty`.
-- `groups`: the scenario's checklist, in section and handoff order. Each item in a group carries `status` (`pass`, `fail`, or `untested`) and `nits` (a list of `{id, item_key, body, url, persona, created_at}`).
+- `groups`: the scenario's checklist, in section and handoff order. A group keeps its failed items, its items with nits, and the untested items of the work. Each kept item carries `status` (`pass`, `fail`, or `untested`) and `nits` (a list of `{id, item_key, body, url, persona, created_at}`). `passed` counts the other passed items of the group. A group with nothing to keep and no passed item is not in the list.
+- `base_not_tested`: the number of base items with no result and no nits in a round that has a `retest(n)` block. The tester did not open the full checklist for them. This is not a failure.
 - `page_nits`: nits with no `item_key`. A page nit is not attached to one item.
 - `orphaned`: `results` and `nits` whose `item_key` is no longer in the checklist. This happens when a check's text changes with no `key:`, or when a scenario removes a check.
 
-Read every `fail` item's `text` and its `nits`, and read every entry in `page_nits`. These are what the retest block must cover.
+Read every `fail` item's `text` and its `nits`, and read every entry in `page_nits`. These are what the retest block must cover. An `untested` item of the work was not checked; carry it into the next retest block only when the user asks.
+
+Use `--json --full` only when you need every item of the round, for example to find the key of a passed item. It lists every item with its status, and it has no `passed` and no `base_not_tested`.
 
 ## Add a retest block
 

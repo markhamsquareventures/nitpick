@@ -126,7 +126,7 @@ class NitpickServiceProvider extends PackageServiceProvider
                 Route::get('queue', [QueueController::class, 'show'])->name('queue.show');
                 Route::post('queue', [QueueController::class, 'store'])->name('queue.store');
                 Route::get('round', [RoundController::class, 'show'])->name('round.show');
-                Route::apiResource('rounds', RoundsController::class)->only(['store', 'update']);
+                Route::apiResource('rounds', RoundsController::class)->only(['index', 'store', 'show', 'update']);
                 Route::apiResource('rounds.results', ResultsController::class)
                     ->only(['update', 'destroy'])
                     ->parameters(['results' => 'itemKey']);

@@ -2,17 +2,19 @@
 Closed 2026-10-03 at a1b2c3d (dirty) by Nick
 
 ## As Arthur Admin (admin@acmecorp.test)
-- [x] Acme Corp is listed and there is no invitation alert
 - [ ] **Fail** Per-row Send on Ursula: toast "Invitation sent.", the row turns Pending
   - Toast said "Invitation queued." (`/teams/acme-corp/members`)
-- [ ] Select Ulysses and press "Send invitations" *(untested)*
+
+1 check passed.
 
 ## Handoff: Invited admin registers
-- [x] Andy Admin: Add member with a fresh address, role team admin
-- [ ] Guest: Open the invitation link from the mail pane *(untested)*
+1 check passed.
 
 ## Retest 2, as Arthur Admin (admin@acmecorp.test)
-- [x] The toast now reads "Invitation sent."
+1 check passed.
+
+## Not tested
+2 checks of the base checklist had no result in this round. `nitpick:results acme-corp-held-invitations --round=2 --json --full` lists them.
 
 ## Page nits
 - Sidebar logo is 2px off (`/home`, as arthur)

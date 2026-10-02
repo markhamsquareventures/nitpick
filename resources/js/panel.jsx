@@ -4,6 +4,7 @@ import css from './panel.css';
 import { errorMessage, request } from './api.js';
 import { ChecklistTab } from './ChecklistTab.jsx';
 import { ConfirmButton } from './ConfirmButton.jsx';
+import { HistoryTab } from './HistoryTab.jsx';
 import { Icon } from './icons.jsx';
 import { MailTab } from './MailTab.jsx';
 import { PersonasTab } from './PersonasTab.jsx';
@@ -15,6 +16,7 @@ const TABS = [
     { key: 'checklist', label: 'Checklist', icon: 'listChecks' },
     { key: 'mail', label: 'Mail', icon: 'mail' },
     { key: 'personas', label: 'Personas', icon: 'users' },
+    { key: 'history', label: 'History', icon: 'history' },
 ];
 
 /** State that is kept per browser in localStorage, so it survives a page load. */
@@ -290,6 +292,8 @@ function App() {
                         )}
                         {tab === 'mail' && <MailTab />}
                         {tab === 'personas' && <PersonasTab scenarios={scenarios} scenario={scenario} user={user} />}
+                        {/* The key changes when a round starts or closes, so the list loads again. */}
+                        {tab === 'history' && <HistoryTab key={round?.round.id} scenario={scenario} />}
                     </div>
 
                     <div ref={tabList} role="tablist" aria-label="Nitpick" class="tabbar" onKeyDown={onTabKeyDown}>
@@ -302,11 +306,12 @@ function App() {
                                 class="tab"
                                 aria-selected={candidate.key === tab}
                                 aria-controls="qa-tabpanel"
+                                aria-label={candidate.label}
+                                title={candidate.label}
                                 tabIndex={candidate.key === tab ? 0 : -1}
                                 onClick={() => setTab(candidate.key)}
                             >
-                                <Icon name={candidate.icon} />
-                                {candidate.label}
+                                <Icon name={candidate.icon} size={20} />
                             </button>
                         ))}
                     </div>

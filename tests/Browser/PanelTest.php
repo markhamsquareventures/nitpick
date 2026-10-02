@@ -403,3 +403,71 @@ it('keeps the full focus ring visible on the pinned page-nit field, above the li
         ->assertNoJavaScriptErrors()
         ->screenshot(filename: 'panel-composer-focus-ring');
 });
+
+it('shows only the retest in round 2, keeps the full checklist open across a login, and lists round 1 in History', function () {
+    $failed = 'The panel shows Arthur Admin as the current persona';
+    $first = Round::query()->create([
+        'scenario' => 'demo-scenario',
+        'number' => 1,
+        'status' => 'closed',
+        'tester' => 'Nick',
+        'opened_at' => '2026-10-01 09:00:00',
+        'closed_at' => '2026-10-01 10:00:00',
+        'git_sha' => 'a1b2c3d4e5f6a7b8c9d0a1b2c3d4e5f6a7b8c9d0',
+        'git_dirty' => false,
+    ]);
+    $first->results()->create(['item_key' => itemKey('The start page loads'), 'status' => 'pass']);
+    $first->results()->create(['item_key' => itemKey($failed), 'status' => 'fail']);
+    $first->nits()->create(['item_key' => itemKey($failed), 'body' => 'The pill shows guest', 'url' => '/', 'persona' => 'arthur']);
+
+    $retest = 'The panel still shows Arthur Admin after a reset';
+    $base = 'The panel shows Mia Member as the current persona';
+
+    $page = visit('/');
+
+    $page->click('.pill')
+        ->waitForText('Round 2 · not started')
+        ->assertSeeIn('.retest', 'Retest 2')
+        ->assertVisible(box($retest))
+        ->assertMissing(box($base))
+        ->assertSeeIn('.full-toggle', '9 checks')
+        ->assertAriaAttribute('.full-toggle', 'expanded', 'false')
+        ->click('Start round')
+        ->waitForText('Round 2 · open')
+        ->click(box($retest))
+        ->click('.full-toggle')
+        ->assertAriaAttribute('.full-toggle', 'expanded', 'true')
+        ->assertVisible(box($base))
+        ->assertEnabled(box($base))
+        ->click(box($base))
+        ->click('[data-focus-key="login:1:mia"]')
+        ->waitForText('mia@workbench.test')
+        ->assertAriaAttribute('.full-toggle', 'expanded', 'true')
+        ->assertSeeIn('[data-focus-key="login:1:mia"]', 'Current')
+        ->assertNoJavaScriptErrors()
+        ->screenshot(filename: 'panel-retest-full-checklist');
+
+    expect(Result::query()->where('round_id', '!=', $first->id)->pluck('status', 'item_key')->map->value->all())
+        ->toBe(['arthur-after-reset' => 'pass', itemKey($base) => 'pass']);
+
+    $page->click('#qa-tab-history')
+        ->waitForText('Round 1')
+        ->assertSeeIn('.row-meta', 'a1b2c3d · 1 passed · 1 failed · 1 nit')
+        ->click('.row')
+        ->waitForText('The pill shows guest')
+        ->assertSeeIn('.panel-card', 'Closed')
+        ->assertSee($failed)
+        ->assertSeeIn('.history-passed', '1 passed')
+        // Round 1 has no retest block, so its untested checks are the work and stay in the list.
+        ->assertSee('The start page loads with no login')
+        ->assertNoJavaScriptErrors()
+        ->screenshot(filename: 'panel-history-round')
+        ->click('All rounds')
+        // A round that closes while the History tab is open shows in the list at once.
+        ->click('.card-header .button')
+        ->click('.confirm .primary')
+        ->waitForText('Round 3 · not started')
+        ->waitForText('Round 2')
+        ->assertCount('.row', 2)
+        ->assertNoJavaScriptErrors();
+});

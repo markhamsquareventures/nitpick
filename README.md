@@ -219,11 +219,12 @@ it('lets Arthur open the members page', function () {
 
 When `APP_ENV=local` and the request host is the host of `APP_URL`, the package puts the QA panel
 into each full HTML page of the app. The app needs no setup step. A pill in the bottom-right corner
-shows the current persona. It opens a card with three tabs:
+shows the current persona. It opens a card with four tabs. The tab bar shows icons, and each tab shows its name on hover:
 
 - **Checklist**: the checks of the scenario, the reset and login buttons, and the nits.
 - **Mail**: the mail that the app sent, with its links. A button runs the queue.
 - **Personas**: find a user and log in as that user.
+- **History**: the closed rounds of the scenario. Open a round to see its failures and nits.
 
 The keyboard shortcut **Alt+Shift+Q** (**Option+Shift+Q** on macOS) opens and closes the card. The
 shortcut does nothing while the focus is in a text field of the app. **Escape** closes the card
@@ -231,17 +232,26 @@ when the focus is in the panel.
 
 ## Rounds
 
-The Checklist tab starts and closes rounds. At most one round is open in the app. Round n shows
-the scenario's checklist and the groups of `->retest(n)`. A round stays open through a reset. When
+The Checklist tab starts and closes rounds. At most one round is open in the app. Round n checks
+the scenario's checklist and the groups of `->retest(n)`. When the scenario has a `->retest(n)`
+block, the Checklist tab shows only that block. The base checks are under **Full checklist**, and
+you can still mark them in that round. Results do not carry over from one round to the next.
+A round stays open through a reset. When
 it closes, the package records the git SHA and a dirty flag of the app repo (a change in `docs/qa`
 does not count), then writes `docs/qa/{scenario-slug}/round-{n}.md`. The dates are in
 `app.timezone`. The tester is `git config user.name` in the app directory.
 
-To read the results of a round (the JSON shape is in `src/Commands/ResultsCommand.php`):
+The report and `nitpick:results` are short, so that an agent reads only the work. They list the
+failed checks, the checks with nits, and the untested checks of the work (the retest block, or the
+full checklist in a round with no retest block). The other passed checks are a count per group, and
+the base checks with no result in a retest round are one count. To read the results of a round
+(the JSON shape is in `src/Commands/ResultsCommand.php`):
 
 ```bash
 php artisan nitpick:results {scenario-slug} --round=latest --json
 ```
+
+Add `--full` to `--json` to get every check of the round.
 
 A round keeps the scenario slug, so a renamed scenario class does not show its old rounds. To add
 another exporter, add a class that implements `RoundExporter` to the `exporters` config list.

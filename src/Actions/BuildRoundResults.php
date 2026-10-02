@@ -8,7 +8,7 @@ use MarkhamSq\Nitpick\Models\Round;
 
 /**
  * Joins a round's results and nits with the checklist of its scenario. The panel's round
- * routes, nitpick:results --json, and the exporters all use this one shape (see ResultsCommand).
+ * routes, nitpick:results --json --full, and the exporters all use this one shape (see ResultsCommand).
  *
  * The checklist of round n is every group that is not in a retest() block, then the groups of
  * retest(n). A result or an item nit whose key is not in that checklist is orphaned.

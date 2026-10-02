@@ -4,6 +4,7 @@ namespace MarkhamSq\Nitpick\Exporters;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
+use MarkhamSq\Nitpick\Actions\FocusRoundResults;
 
 /** Writes docs/qa/{scenario-slug}/round-{n}.md in the app. nitpick:results without --json prints the same text. */
 class MarkdownExporter implements RoundExporter
@@ -11,9 +12,17 @@ class MarkdownExporter implements RoundExporter
     /** The directory of the reports, relative to the app. Git::isDirty() ignores it. */
     public const DIRECTORY = 'docs/qa';
 
+    public function __construct(private FocusRoundResults $focusRoundResults) {}
+
+    /** The report path of a round, relative to the app. */
+    public static function path(string $scenario, int $number): string
+    {
+        return self::DIRECTORY."/{$scenario}/round-{$number}.md";
+    }
+
     public function export(array $results): string
     {
-        $path = self::DIRECTORY."/{$results['round']['scenario']}/round-{$results['round']['number']}.md";
+        $path = self::path($results['round']['scenario'], $results['round']['number']);
 
         File::ensureDirectoryExists(dirname(base_path($path)));
         File::put(base_path($path), $this->render($results));
@@ -21,9 +30,10 @@ class MarkdownExporter implements RoundExporter
         return $path;
     }
 
-    /** @param array<string, mixed> $results The BuildRoundResults shape. */
+    /** @param array<string, mixed> $results The BuildRoundResults shape. The report shows its FocusRoundResults shape. */
     public function render(array $results): string
     {
+        $results = ($this->focusRoundResults)($results);
         $round = $results['round'];
         $personas = collect($results['personas'])->keyBy('key');
 
@@ -46,6 +56,23 @@ class MarkdownExporter implements RoundExporter
                     $lines[] = '  - '.$this->nitText($nit, withPersona: false);
                 }
             }
+
+            if ($group['passed'] === 0) {
+                continue;
+            }
+
+            // The blank line keeps the count out of the last list item.
+            if ($group['items'] !== []) {
+                $lines[] = '';
+            }
+
+            $lines[] = $this->checkCount($group['passed']).' passed.';
+        }
+
+        if ($results['base_not_tested'] > 0) {
+            $lines[] = '';
+            $lines[] = '## Not tested';
+            $lines[] = $this->checkCount($results['base_not_tested'])." of the base checklist had no result in this round. `nitpick:results {$round['scenario']} --round={$round['number']} --json --full` lists them.";
         }
 
         $lines[] = '';
@@ -108,6 +135,11 @@ class MarkdownExporter implements RoundExporter
         }
 
         return "Retest {$group['retest']}, ".lcfirst($heading);
+    }
+
+    private function checkCount(int $count): string
+    {
+        return $count === 1 ? '1 check' : "{$count} checks";
     }
 
     private function itemLine(string $status, string $text): string

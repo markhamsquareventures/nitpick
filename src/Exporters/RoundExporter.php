@@ -9,7 +9,7 @@ namespace MarkhamSq\Nitpick\Exporters;
 interface RoundExporter
 {
     /**
-     * @param  array<string, mixed>  $results  The BuildRoundResults shape, the same as nitpick:results --json.
+     * @param  array<string, mixed>  $results  The BuildRoundResults shape, the same as nitpick:results --json --full.
      * @return string Where the export went, for the panel (for example a path relative to the app).
      */
     public function export(array $results): string;

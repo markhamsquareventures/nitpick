@@ -290,3 +290,46 @@ it('keeps the open round and its results through a reset', function () {
         ->assertJsonPath('round.round.status', 'open')
         ->assertJsonPath('round.groups.0.items.0.status', 'pass');
 });
+
+it('lists the closed rounds of a scenario, newest first, with their counts and report', function () {
+    $first = startRound();
+    putJson("/nitpick/rounds/{$first->id}/results/listed", ['status' => 'pass'])->assertOk();
+    putJson("/nitpick/rounds/{$first->id}/results/ursula-send", ['status' => 'fail'])->assertOk();
+    postJson("/nitpick/rounds/{$first->id}/nits", ['item_key' => 'ursula-send', 'body' => 'Wrong toast', 'url' => 'http://127.0.0.1/members'])->assertCreated();
+    closeRound($first);
+
+    $second = startRound();
+    closeRound($second);
+    File::delete(base_path('docs/qa/acme-corp-held-invitations/round-2.md'));
+
+    startRound();
+
+    getJson('/nitpick/rounds?scenario=acme-corp-held-invitations')
+        ->assertOk()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.0', fn (array $round) => $round['number'] === 2 && $round['report'] === null)
+        ->assertJsonPath('data.1.number', 1)
+        ->assertJsonPath('data.1.passed', 1)
+        ->assertJsonPath('data.1.failed', 1)
+        ->assertJsonPath('data.1.nits', 1)
+        ->assertJsonPath('data.1.report', 'docs/qa/acme-corp-held-invitations/round-1.md');
+
+    getJson('/nitpick/rounds?scenario=demo-scenario')->assertExactJson(['data' => []]);
+    getJson('/nitpick/rounds')->assertUnprocessable();
+});
+
+it('shows one round in the short shape', function () {
+    Round::query()->create(['scenario' => 'acme-corp-held-invitations', 'number' => 1, 'status' => 'closed', 'tester' => 'Nick', 'opened_at' => now(), 'closed_at' => now()]);
+    $round = startRound();
+    putJson("/nitpick/rounds/{$round->id}/results/ursula-toast", ['status' => 'pass'])->assertOk();
+    putJson("/nitpick/rounds/{$round->id}/results/ursula-send", ['status' => 'fail'])->assertOk();
+    closeRound($round);
+
+    getJson("/nitpick/rounds/{$round->id}")
+        ->assertOk()
+        ->assertJsonPath('round.round.number', 2)
+        ->assertJsonPath('round.groups.0.items.0.key', 'ursula-send')
+        ->assertJsonPath('round.groups.1.retest', 2)
+        ->assertJsonPath('round.groups.1.passed', 1)
+        ->assertJsonPath('round.base_not_tested', 4);
+});

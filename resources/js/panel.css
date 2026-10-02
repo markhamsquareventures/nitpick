@@ -317,7 +317,7 @@ button:disabled {
 .tabbar {
     flex: none;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--qa-space-1);
     padding: var(--qa-space-2);
 }
@@ -326,13 +326,11 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--qa-space-2);
     height: var(--qa-target);
     border: 0;
     border-radius: var(--qa-radius-control);
     background: transparent;
     color: var(--qa-text-muted);
-    font-weight: 500;
 }
 
 .tab:hover {
@@ -343,7 +341,6 @@ button:disabled {
 .tab[aria-selected='true'] {
     background: var(--qa-selected);
     color: var(--qa-text);
-    font-weight: 600;
 }
 
 /* Layout. */
@@ -394,12 +391,66 @@ button:disabled {
 }
 
 .retest {
-    margin: var(--qa-space-4) 0 0;
+    margin: 0;
     padding: 0 var(--qa-space-3);
     color: var(--qa-accent);
     font-size: var(--qa-text-md);
     font-weight: 600;
     line-height: var(--qa-leading-md);
+}
+
+/* The toggle of the base groups in a retest round. Its text lines up with the group titles. */
+.full-heading {
+    margin: 0;
+}
+
+.full-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--qa-space-2);
+    width: 100%;
+    height: var(--qa-target);
+    padding: 0 var(--qa-space-3);
+    border: 0;
+    border-radius: var(--qa-radius-control);
+    background: transparent;
+    color: var(--qa-text);
+    font-size: var(--qa-text-md);
+    font-weight: 600;
+    line-height: var(--qa-leading-md);
+    transition: background-color 120ms ease;
+}
+
+.full-toggle:hover {
+    background: var(--qa-surface);
+}
+
+.full-count {
+    flex: 1 1 0;
+    color: var(--qa-text-muted);
+    font-weight: 400;
+    text-align: left;
+}
+
+.full-toggle .icon {
+    color: var(--qa-text-muted);
+    transition: transform 120ms ease;
+}
+
+.full-toggle[aria-expanded='true'] .icon {
+    transform: rotate(180deg);
+}
+
+.history-note {
+    padding: 0 var(--qa-space-3);
+}
+
+.history-passed {
+    padding-right: var(--qa-space-3);
+}
+
+.stack[hidden] {
+    display: none;
 }
 
 .panel-card {
@@ -1057,6 +1108,8 @@ button.row:hover {
     .pill,
     .button,
     .row,
+    .full-toggle,
+    .full-toggle .icon,
     .goto,
     .box-glyph {
         transition: none;

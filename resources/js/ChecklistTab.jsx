@@ -5,7 +5,7 @@ import { ConfirmButton } from './ConfirmButton.jsx';
 import { fillForm } from './fill.js';
 import { Icon } from './icons.jsx';
 import { Scroller } from './Scroller.jsx';
-import { openWithFocus } from './storage.js';
+import { local, openWithFocus } from './storage.js';
 
 const NO_ROUND = 'Start a round to record results and nits';
 
@@ -222,9 +222,9 @@ const NEXT_STATUS = { untested: 'pass', pass: 'fail', fail: 'untested' };
 
 const NEXT_ACTIONS = { untested: 'press to mark passed', pass: 'press to mark failed', fail: 'press to clear' };
 
-const STATUS_WORDS = { untested: 'not tested', pass: 'passed', fail: 'failed' };
+export const STATUS_WORDS = { untested: 'not tested', pass: 'passed', fail: 'failed' };
 
-const STATUS_GLYPHS = { pass: 'check', fail: 'x' };
+export const STATUS_GLYPHS = { pass: 'check', fail: 'x' };
 
 function nitCount(count) {
     return count === 1 ? '1 nit' : `${count} nits`;
@@ -553,6 +553,35 @@ function OrphanedGroup({ round, onRoundChange }) {
     );
 }
 
+/**
+ * The base groups of a retest round, behind a toggle. The open state is kept per round in
+ * localStorage, because a login or a reset loads a new page and must find its button again.
+ */
+function FullChecklist({ storageKey, count, children }) {
+    const [open, setOpen] = useState(() => local.read(storageKey, false));
+    const contentId = useId();
+
+    const toggle = () => {
+        setOpen(!open);
+        local.write(storageKey, open ? null : true);
+    };
+
+    return (
+        <>
+            <h3 class="full-heading">
+                <button type="button" class="full-toggle" aria-expanded={open} aria-controls={contentId} onClick={toggle}>
+                    Full checklist
+                    <span class="full-count">{count === 1 ? '1 check' : `${count} checks`}</span>
+                    <Icon name="chevronDown" />
+                </button>
+            </h3>
+            <div id={contentId} class="stack" hidden={!open}>
+                {children}
+            </div>
+        </>
+    );
+}
+
 /** The page-nit field, pinned under the Checklist's scroll area. */
 function NitComposer({ round, onRoundChange }) {
     const [body, setBody] = useState('');
@@ -638,30 +667,43 @@ export function ChecklistTab({ scenarios, scenario, round, ready, nextNumber, cu
     const groups = scenario.groups.filter(
         (group) => roundHasScenario && (group.retest === null || group.retest === roundNumber),
     );
+    // In a round with retest groups, the retest is the work, and the base groups wait behind the full checklist toggle.
+    const isRetestRound = groups.some((group) => group.retest !== null);
     const results = new Map((round?.groups ?? []).flatMap((group) => group.items).map((item) => [item.key, item]));
     const itemProps = (item) => ({ round, result: results.get(item.key), onRoundChange });
+
+    // The index is the group's place in the round, so a focus key stays the same when the toggle opens.
+    const renderGroup = (group, index, Heading) => (
+        <Group
+            key={index}
+            scenario={scenario}
+            group={group}
+            index={index}
+            Heading={Heading}
+            currentEmail={currentEmail}
+            itemProps={itemProps}
+        />
+    );
 
     return (
         <>
             <Scroller name="checklist" ready>
                 <div class="stack">
-                    {groups.map((group, index) => {
-                        const startsRetest = group.retest !== null && group.retest !== groups[index - 1]?.retest;
+                    {!isRetestRound && groups.map((group, index) => renderGroup(group, index, 'h3'))}
 
-                        return (
-                            <Fragment key={index}>
-                                {startsRetest && <h3 class="retest">Retest {group.retest}</h3>}
-                                <Group
-                                    scenario={scenario}
-                                    group={group}
-                                    index={index}
-                                    Heading={group.retest === null ? 'h3' : 'h4'}
-                                    currentEmail={currentEmail}
-                                    itemProps={itemProps}
-                                />
-                            </Fragment>
-                        );
-                    })}
+                    {isRetestRound && (
+                        <>
+                            <h3 class="retest">Retest {roundNumber}</h3>
+                            {groups.map((group, index) => group.retest !== null && renderGroup(group, index, 'h4'))}
+                            <FullChecklist
+                                key={`full.${scenario.slug}.${roundNumber}`}
+                                storageKey={`full.${scenario.slug}.${roundNumber}`}
+                                count={groups.filter((group) => group.retest === null).flatMap((group) => group.items).length}
+                            >
+                                {groups.map((group, index) => group.retest === null && renderGroup(group, index, 'h4'))}
+                            </FullChecklist>
+                        </>
+                    )}
 
                     <section class="group">
                         <div class="group-header">

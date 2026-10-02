@@ -38,13 +38,50 @@ function resultsJson(array $options): array
     return json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
 }
 
-it('prints the latest round as JSON, with the items of its retest block', function () {
+it('prints only the work of a retest round as JSON, and counts the rest', function () {
+    Round::query()->where('number', 2)->sole()->results()->create(['item_key' => 'listed', 'status' => 'fail']);
+
     $results = resultsJson([]);
 
     expect($results['round'])->toMatchArray(['number' => 2, 'status' => 'open', 'closed_at' => null, 'git_sha' => null])
-        ->and(collect($results['groups'])->pluck('retest')->all())->toBe([null, null, 2])
+        ->and($results['groups'])->toHaveCount(2)
+        ->and($results['groups'][0])->toMatchArray(['retest' => null, 'passed' => 0])
+        ->and(collect($results['groups'][0]['items'])->pluck('key')->all())->toBe(['listed'])
+        ->and($results['groups'][1])->toMatchArray(['retest' => 2, 'items' => [], 'passed' => 1])
+        ->and($results['base_not_tested'])->toBe(4);
+});
+
+it('keeps an untested retest item and a passed item with nits', function () {
+    $round = Round::query()->where('number', 2)->sole();
+    $round->results()->delete();
+    $round->results()->create(['item_key' => 'listed', 'status' => 'pass']);
+    $round->nits()->create(['item_key' => 'listed', 'body' => 'Alert flickers', 'url' => '/home', 'persona' => 'arthur']);
+
+    $results = resultsJson([]);
+
+    expect(collect($results['groups'])->map(fn (array $group) => [$group['retest'], collect($group['items'])->pluck('key')->all(), $group['passed']])->all())
+        ->toBe([[null, ['listed'], 0], [2, ['ursula-toast'], 0]])
+        ->and($results['base_not_tested'])->toBe(4);
+});
+
+it('treats every group as the work in a round with no retest block', function () {
+    Round::query()->where('number', 2)->sole()->update(['number' => 4]);
+
+    $results = resultsJson([]);
+
+    expect(collect($results['groups'])->pluck('retest')->all())->toBe([null, null])
+        ->and(collect($results['groups'])->pluck('items')->flatten(1)->pluck('status')->unique()->all())->toBe(['untested'])
+        ->and($results['base_not_tested'])->toBe(0);
+});
+
+it('prints every item with --full', function () {
+    $results = resultsJson(['--full' => true]);
+
+    expect(collect($results['groups'])->pluck('retest')->all())->toBe([null, null, 2])
+        ->and($results['groups'][0]['items'][0])->toMatchArray(['key' => 'listed', 'status' => 'untested'])
         ->and($results['groups'][2]['items'][0])->toMatchArray(['key' => 'ursula-toast', 'status' => 'pass', 'nits' => []])
-        ->and($results['groups'][0]['items'][0]['status'])->toBe('untested');
+        ->and($results)->not->toHaveKey('base_not_tested')
+        ->and($results['groups'][0])->not->toHaveKey('passed');
 });
 
 it('prints a round by number with its failures, nits, page nits, and orphans', function () {

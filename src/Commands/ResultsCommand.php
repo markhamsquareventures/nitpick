@@ -4,21 +4,29 @@ namespace MarkhamSq\Nitpick\Commands;
 
 use Illuminate\Console\Command;
 use MarkhamSq\Nitpick\Actions\BuildRoundResults;
+use MarkhamSq\Nitpick\Actions\FocusRoundResults;
 use MarkhamSq\Nitpick\Exporters\MarkdownExporter;
 use MarkhamSq\Nitpick\Models\Round;
 
 /**
- * Usage: php artisan nitpick:results {scenario-slug} [--round=latest|{number}] [--json]
+ * Usage: php artisan nitpick:results {scenario-slug} [--round=latest|{number}] [--json [--full]]
  *
  * Prints the results of one round of a scenario (default: the round with the highest number,
  * open or closed). Without --json, it prints the markdown report of the round.
  *
- * The --json output: "round" is the round metadata. "groups" is the round's checklist in the
+ * The --json output is short (the FocusRoundResults shape), so that an agent reads only what
+ * needs work. "round" is the round metadata. "groups" is the round's checklist in the
  * nitpick:scenarios --json shape: the groups that are not in a retest() block, then the groups of
- * retest(n) for round n. Each item also has "status" (pass, fail, or untested) and "nits".
- * "page_nits" are the nits that are not on an item. "orphaned" has the results and the item
- * nits whose key is not in the round's checklist (the item was removed or its text changed).
- * Times are ISO 8601. The panel's round routes answer the same shape. An example:
+ * retest(n) for round n. In round n, the retest(n) groups are the work when they exist; else all
+ * groups are the work. Each group keeps only its failed items, its items with nits, and the
+ * untested items of the work. Each kept item also has "status" (pass, fail, or untested) and
+ * "nits". "passed" counts the other passed items of the group. "base_not_tested" counts the base
+ * items with no result and no nits in a round that has retest groups. "page_nits" are the nits
+ * that are not on an item. "orphaned" has the results and the item nits whose key is not in the
+ * round's checklist (the item was removed or its text changed). Times are ISO 8601.
+ *
+ * --full prints every item of every group, with no "passed" and no "base_not_tested". The
+ * panel's round routes answer this full shape. An example of the short shape:
  *
  * {
  *     "round": {
@@ -38,9 +46,11 @@ use MarkhamSq\Nitpick\Models\Round;
  *                     "nits": [{"id": 7, "item_key": "5d41402abc4b", "body": "Toast said \"Invitation queued.\"",
  *                               "url": "/members", "persona": "arthur", "created_at": "2026-10-03T14:20:05+00:00"}]
  *                 }
- *             ]
+ *             ],
+ *             "passed": 2
  *         }
  *     ],
+ *     "base_not_tested": 0,
  *     "page_nits": [{"id": 8, "item_key": null, "body": "Sidebar logo is 2px off", "url": "/home", "persona": "arthur", "created_at": "..."}],
  *     "orphaned": {"results": [{"item_key": "old-check", "status": "pass"}], "nits": []}
  * }
@@ -52,11 +62,12 @@ class ResultsCommand extends Command
     public $signature = 'nitpick:results
         {scenario : The scenario slug, as nitpick:scenarios prints it}
         {--round=latest : "latest" or a round number}
-        {--json : Print the results as JSON}';
+        {--json : Print the results as JSON}
+        {--full : With --json, print every item, not only the items that need work}';
 
     public $description = 'Print the results and nits of a Nitpick round';
 
-    public function handle(BuildRoundResults $buildRoundResults, MarkdownExporter $markdownExporter): int
+    public function handle(BuildRoundResults $buildRoundResults, FocusRoundResults $focusRoundResults, MarkdownExporter $markdownExporter): int
     {
         $scenario = $this->argument('scenario');
         $roundOption = $this->option('round');
@@ -86,6 +97,10 @@ class ResultsCommand extends Command
         $results = $buildRoundResults($round);
 
         if ($this->option('json')) {
+            if (! $this->option('full')) {
+                $results = $focusRoundResults($results);
+            }
+
             $this->line(json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
 
             return self::SUCCESS;
